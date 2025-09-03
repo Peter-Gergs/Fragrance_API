@@ -43,7 +43,7 @@ OPAY_SECRET_KEY = "OPAYPRV17544756341740.13079928036916444"
 
 
 FRONTEND_URL = "https://www.3sfragrance.com"
-BACKEND_URL = "https://staff.3sfragrance.com"
+BACKEND_URL = "https://api.3sfragrance.com"
 # Application definition
 
 INSTALLED_APPS = [
