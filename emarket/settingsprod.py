@@ -149,7 +149,7 @@ DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.postgresql",
         "NAME": "fragrance_db",
-        "USER": "postgres",
+        "USER": "fragrance_admin",
         "PASSWORD": os.environ.get("DB_PASSWORD", ""),
         "HOST": "localhost",
         "PORT": "5432",
