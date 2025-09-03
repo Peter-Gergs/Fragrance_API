@@ -33,7 +33,7 @@ DEBUG = True
 
 ALLOWED_HOSTS = [
     "127.0.0.1",
-    "api.future-vesta.com",
+    "api.3sfragrance.com",
 ]
 
 LANGUAGES = [
@@ -76,7 +76,7 @@ INSTALLED_APPS = [
 
 JAZZMIN_SETTINGS = {
     "site_title": "Shop Dashboard",
-    "site_brand": "Future",
+    "site_brand": "3s Fragrance",
     "welcome_sign": "Welcome to Dashboard",
     "site_logo": "images/logo.png",
     "show_sidebar": True,
@@ -192,15 +192,15 @@ AUTH_PASSWORD_VALIDATORS = [
 
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:5173",
-    "https://future-vesta.com",
-    "https://www.future-vesta.com",
-    "http://api.future-vesta.com",
+    "https://3sfragrance.com",
+    "https://www.3sfragrance.com",
+    "http://api.3sfragrance.com",
 ]
 
 CSRF_TRUSTED_ORIGINS = [
-    "https://api.future-vesta.com",
-    "https://future-vesta.com",
-    "https://www.future-vesta.com",
+    "https://api.3sfragrance.com",
+    "https://3sfragrance.com",
+    "https://www.3sfragrance.com",
 ]
 
 
