@@ -14,7 +14,16 @@ class ProductVariantSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = ProductVariant
-        fields = ["id", "size_ml", "price", "final_price", "discount", "stock"]
+        fields = [
+            "id",
+            "size_ml",
+            "price",
+            "withbox",
+            "travelsize",
+            "final_price",
+            "discount",
+            "stock",
+        ]
 
     def get_final_price(self, obj):
         if obj.discount:
