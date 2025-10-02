@@ -53,6 +53,9 @@ class ProductVariant(models.Model):
     )
     withbox = models.BooleanField(default=False) 
     travelsize = models.BooleanField(default=False) 
+    class Meta:
+        ordering = ["size_ml"]
+
     def __str__(self):
         return f"{self.product.name} - {self.size_ml}ml"
 

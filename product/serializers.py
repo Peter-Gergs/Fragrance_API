@@ -18,7 +18,7 @@ class ProductVariantSerializer(serializers.ModelSerializer):
             "id",
             "size_ml",
             "price",
-            "withbox",
+            "withbox",  
             "travelsize",
             "final_price",
             "discount",
