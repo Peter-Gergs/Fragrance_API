@@ -148,10 +148,24 @@ def initiate_payment(request):
         currency="EGP",
         return_url=f"{settings.FRONTEND_URL}/payment/return",
         cancel_url=f"{settings.FRONTEND_URL}/payment/cancel",
-        callback_url=f"{settings.BACKEND_URL}/api/payment/callback",
+        callback_url=f"{settings.BACKEND_URL}/api/payment/webhook",
         user_info=user_info,
         product_list=product_list,
     )
+
+    # 5. خزّن reference في session
+    request.session["opay_reference"] = result.get("reference")
+    request.session["checkout_address"] = {
+        "customer_phone": request.data.get("customer_phone"),
+        "governorate": request.data.get("governorate"),
+        "city": request.data.get("city"),
+        "street": request.data.get("street"),
+        "building_number": request.data.get("building_number"),
+        "floor_number": request.data.get("floor_number"),
+        "apartment_number": request.data.get("apartment_number"),
+        "landmark": request.data.get("landmark"),
+    }
+    request.session.save()
 
     return Response(result)
 
@@ -159,35 +173,44 @@ def initiate_payment(request):
 @api_view(["POST"])
 def opay_webhook(request):
     """
-    بعد نجاح الدفع، ينشئ Order وينقل كل CartItem إلى OrderItem
+    يستقبل إشعار الدفع من OPay.
+    لو الدفع ناجح → ينشئ Order وينقل العناصر من الكارت.
     """
     data = request.data
+    print("🔔 OPay Webhook Received:", data)
+
     if data.get("status") != "SUCCESS":
         return Response({"status": "Ignored (not successful)"})
 
     reference = data.get("reference")
-    # يمكن البحث عن Cart عبر reference إذا خزناه، هنا نفترض استخدام session
+    if not reference:
+        return Response({"error": "Missing reference."}, status=400)
+
+    # 🔍 البحث عن الـ session اللي فيها reference ده
     from django.contrib.sessions.models import Session
 
-    sessions = Session.objects.all()
     cart = None
-    for session in sessions:
+    user = None
+    checkout_address = None
+
+    for session in Session.objects.all():
         s_data = session.get_decoded()
         if s_data.get("opay_reference") == reference:
             user_id = s_data.get("_auth_user_id")
+            checkout_address = s_data.get("checkout_address")
             from django.contrib.auth import get_user_model
 
-            user = get_user_model().objects.get(id=user_id)
-            cart = Cart.objects.get(user=user)
-            checkout_address = s_data.get("checkout_address")
+            User = get_user_model()
+            user = User.objects.filter(id=user_id).first()
+            cart = Cart.objects.filter(user=user).first()
             break
 
     if not cart:
         return Response({"error": "Cart not found for this payment."}, status=404)
 
-    # إنشاء Order
+    # 🧾 إنشاء Order
     order = Order.objects.create(
-        user=cart.user,
+        user=user,
         customer_phone=checkout_address.get("customer_phone"),
         governorate=checkout_address.get("governorate"),
         city=checkout_address.get("city"),
@@ -216,11 +239,11 @@ def opay_webhook(request):
         item.variant.stock -= item.quantity
         products_to_update.append(item.variant)
 
+    # 🧮 حفظ الإجمالي وتحديث المخزون
     order.total_amount = total_amount
     order.save()
     cart.items.all().delete()
-    # تحديث المخزون
     for variant in products_to_update:
         variant.save()
 
-    return Response({"status": "Order created successfully"})
+    return Response({"status": "Order created successfully ✅"})
