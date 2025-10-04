@@ -31,6 +31,7 @@ DEBUG = True
 ALLOWED_HOSTS = [
     "127.0.0.1",
     "api.3sfragrance.com",
+    "localhost"
 ]
 
 
@@ -186,6 +187,7 @@ CORS_ALLOWED_ORIGINS = [
     "https://www.future-vesta.com",
 ]
 
+CORS_ALLOW_CREDENTIALS = True
 
 REST_FRAMEWORK = {
     "DEFAULT_RENDERER_CLASSES": [
@@ -227,3 +229,20 @@ MEDIA_ROOT = os.path.join(BASE_DIR, "media")
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
+
+SESSION_COOKIE_NAME = "sessionid"
+SESSION_ENGINE = "django.contrib.sessions.backends.db"
+
+SESSION_COOKIE_SAMESITE = None  # ملاحظة: None بدون كوتيشن في Django 5.2+
+SESSION_COOKIE_SECURE = False
+
+CSRF_COOKIE_SAMESITE = None
+CSRF_COOKIE_SECURE = False
+
+CORS_ALLOW_CREDENTIALS = True
+CORS_ALLOWED_ORIGINS = [
+    "http://localhost:5173",
+]
+CSRF_TRUSTED_ORIGINS = [
+    "http://localhost:5173",
+]

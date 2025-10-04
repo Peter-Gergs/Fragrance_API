@@ -27,7 +27,7 @@ def get_all_products(request):
 
 @api_view(["GET"])
 def get_swiper_products(request):
-    products = Product.objects.all().order_by("id")[:8]
+    products = Product.objects.all().order_by("id")[:10]
     serializer = ProductSerializer(products, many=True, context={"request": request})
     return Response(serializer.data) 
 
@@ -90,7 +90,6 @@ def flash_sale_products(request):
 
     # جلب المنتجات الفريدة بناءً على الـ ids
     discounted_products = Product.objects.filter(id__in=discounted_variant_products_ids)
-
     paginator = PageNumberPagination()
     paginator.page_size = 10
     queryset = paginator.paginate_queryset(discounted_products, request)

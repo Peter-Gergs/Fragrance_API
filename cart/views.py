@@ -12,16 +12,26 @@ from product.models import ProductVariant
 from payment.utils import create_cashier_payment
 
 
+def get_or_create_cart(request):
+    """ترجع الكارت سواء لليوزر أو للضيف"""
+    if request.user.is_authenticated:
+        cart, _ = Cart.objects.get_or_create(user=request.user)
+    else:
+        if not request.session.session_key:
+            request.session.create()
+        session_key = request.session.session_key
+        cart, _ = Cart.objects.get_or_create(session_key=session_key)
+    return cart
+
+
 @api_view(["GET"])
-@permission_classes([IsAuthenticated])
 def get_cart(request):
-    cart, _ = Cart.objects.get_or_create(user=request.user)
+    cart = get_or_create_cart(request)
     serializer = CartSerializer(cart)
     return Response(serializer.data)
 
 
 @api_view(["POST"])
-@permission_classes([IsAuthenticated])
 def add_to_cart(request):
     variant_id = request.data.get("variant_id")
     quantity = int(request.data.get("quantity", 1))
@@ -30,25 +40,34 @@ def add_to_cart(request):
 
     if quantity > variant.stock:
         return Response(
-            {"error": "Requested quantity exceeds available stock."}, status=400
+            {"error": "Requested quantity exceeds available stock."},
+            status=status.HTTP_400_BAD_REQUEST,
         )
 
-    cart, _ = Cart.objects.get_or_create(user=request.user)
+    cart = get_or_create_cart(request)
+
     cart_item, created = CartItem.objects.get_or_create(cart=cart, variant=variant)
 
     total_quantity = quantity if created else cart_item.quantity + quantity
+
     if total_quantity > variant.stock:
-        return Response({"error": "Total quantity in cart exceeds stock."}, status=400)
+        return Response(
+            {"error": "Total quantity in cart exceeds available stock."},
+            status=status.HTTP_400_BAD_REQUEST,
+        )
 
     cart_item.quantity = total_quantity
     cart_item.save()
-    return Response({"message": "Variant added to cart successfully."})
+
+    return Response(
+        {"message": "Variant added to cart successfully."},
+        status=status.HTTP_200_OK,
+    )
 
 
 @api_view(["PATCH"])
-@permission_classes([IsAuthenticated])
 def update_cart_item_quantity(request, item_id):
-    cart = get_object_or_404(Cart, user=request.user)
+    cart = get_or_create_cart(request)
     item = get_object_or_404(CartItem, id=item_id, cart=cart)
 
     quantity = int(request.data.get("quantity", 1))
@@ -65,9 +84,8 @@ def update_cart_item_quantity(request, item_id):
 
 
 @api_view(["DELETE"])
-@permission_classes([IsAuthenticated])
 def delete_cart_item(request, item_id):
-    cart = get_object_or_404(Cart, user=request.user)
+    cart = get_or_create_cart(request)
     item = get_object_or_404(CartItem, id=item_id, cart=cart)
     item.delete()
     return Response({"message": "Item deleted from cart."})
@@ -75,29 +93,42 @@ def delete_cart_item(request, item_id):
 
 @api_view(["POST"])
 def initiate_payment(request):
-    user = request.user
-
-    # 1. اجمع بيانات الكارت
-    cart = Cart.objects.get(user=user)
+    cart = get_or_create_cart(request)
     cart_items = cart.items.all()
 
+    if not cart_items.exists():
+        return Response({"error": "Cart is empty."}, status=400)
+
+    # 1. احسب الإجمالي
     subtotal = sum(
         (item.variant.price - (item.variant.discount or 0)) * item.quantity
         for item in cart_items
     )
-    shipping_cost = ShippingSetting.objects.first().cost
-    total_amount = subtotal + (shipping_cost)
+
+    shipping_setting = ShippingSetting.objects.first()
+    shipping_cost = shipping_setting.cost if shipping_setting else 0
+    total_amount = subtotal + shipping_cost
     amount = int(total_amount * 100)
     print(amount)
-    # 2. جهز بيانات العميل
-    user_info = {
-        "userId": str(user.id),
-        "phone": request.data.get("customer_phone"),
-        "email": user.email or "test@example.com",
-        "name": user.get_full_name() or "Guest",
-    }
 
-    # 3. جهز قائمة المنتجات
+    # 2. بيانات العميل
+    if request.user.is_authenticated:
+        user_info = {
+            "userId": str(request.user.id),
+            "phone": request.data.get("customer_phone"),
+            "email": request.user.email or "test@example.com",
+            "name": request.user.get_full_name() or "Guest",
+        }
+    else:
+        # لو ضيف — ناخد بياناته من الريكوست
+        user_info = {
+            "userId": "guest",
+            "phone": request.data.get("customer_phone"),
+            "email": request.data.get("customer_email"),
+            "name": request.data.get("customer_name", "Guest"),
+        }
+
+    # 3. المنتجات
     product_list = []
     for item in cart_items:
         product_list.append(
@@ -110,6 +141,7 @@ def initiate_payment(request):
             }
         )
     print(product_list)
+
     # 4. استدعاء util
     result = create_cashier_payment(
         amount=amount,
