@@ -1,7 +1,7 @@
 from django.db import models
 from operator import mod
 from django.contrib.auth.models import User
-from product.models import Product
+from product.models import Product, ProductVariant
 
 # Create your models here.
 
@@ -56,7 +56,12 @@ class OrderItem(models.Model):
     name = models.CharField(max_length=200, default="", blank=False)
     quantity = models.IntegerField(default=1)
     price = models.DecimalField(max_digits=7, decimal_places=2, blank=False)
-
+    variant = models.ForeignKey(
+        ProductVariant,
+        on_delete=models.SET_NULL,
+        null=True,
+        related_name="order_items",
+    )
     def __str__(self):
         return self.name
 
