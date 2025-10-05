@@ -6,13 +6,23 @@ from .models import Order, OrderItem, ShippingSetting, PendingOrder
 class OrderItemInline(admin.TabularInline):
     model = OrderItem
     extra = 0
+
+    # ✅ هنا يجب أن نستخدم دالة display_variant لتحديد الحقول للقراءة فقط
+    # يجب أن تكون الحقول في fields مطابقة للحقول في readonly_fields
     readonly_fields = ["display_variant", "name", "quantity", "price"]
     fields = ["display_variant", "name", "quantity", "price"]
 
     def display_variant(self, obj):
-        return obj.variant.name if obj.variant else "-"
+        # 💡 هذا الكود يعرض اسم المنتج الأساسي + حجم العبوة (size_ml)
+        if obj.variant:
+            # الوصول لاسم المنتج عبر obj.variant.product.name
+            # الوصول للحجم عبر obj.variant.size_ml
+            return f"{obj.name} - {obj.variant.size_ml} ml"
 
-    display_variant.short_description = "Variant"
+        # في حال تم حذف الـ Variant أو لم يتم ربطه
+        return obj.name
+
+    display_variant.short_description = "Product/Size (ml)"
 
 
 # ✅ تحسين شكل عرض الطلبات في لوحة الأدمن
