@@ -20,3 +20,11 @@ urlpatterns = [
     path("payment/webhook/", views.opay_webhook, name="payment_webhook"),
     path("payment/callback/", views.opay_webhook, name="payment_callback"),
 ]
+
+
+from django.views.generic.base import RedirectView
+
+urlpatterns += [
+    path("payment/webhook", RedirectView.as_view(url="/api/payment/webhook/", permanent=True)),
+    path("payment/callback", RedirectView.as_view(url="/api/payment/callback/", permanent=True)),
+]
