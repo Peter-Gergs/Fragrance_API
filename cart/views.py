@@ -14,8 +14,9 @@ from django.contrib.sessions.models import Session
 from django.contrib.auth import get_user_model
 from django.views.decorators.csrf import csrf_exempt
 import sys
+from payment.models import PaymentTransaction  # <=== تم الإضافة
+import json  # تم الإضافة
 import logging
-
 
 def get_or_create_cart(request):
     """ترجع الكارت سواء لليوزر أو للضيف"""
@@ -105,6 +106,7 @@ def initiate_payment(request):
         return Response({"error": "Cart is empty."}, status=400)
 
     # 1. احسب الإجمالي
+    # ... (الكود كما هو)
     subtotal = sum(
         (item.variant.price - (item.variant.discount or 0)) * item.quantity
         for item in cart_items
@@ -117,6 +119,7 @@ def initiate_payment(request):
     print(amount)
 
     # 2. بيانات العميل
+    # ... (الكود كما هو)
     if request.user.is_authenticated:
         user_info = {
             "userId": str(request.user.id),
@@ -134,6 +137,7 @@ def initiate_payment(request):
         }
 
     # 3. المنتجات
+    # ... (الكود كما هو)
     product_list = []
     for item in cart_items:
         product_list.append(
@@ -145,12 +149,6 @@ def initiate_payment(request):
                 "price": str(int(item.variant.price * 100)),
             }
         )
-    print(product_list)
-    print(
-        "Backend URL is:",
-        f"{settings.BACKEND_URL}/api/payment/callback/",
-        file=sys.stderr,
-    )
 
     # 4. استدعاء util
     result = create_cashier_payment(
@@ -163,9 +161,11 @@ def initiate_payment(request):
         product_list=product_list,
     )
 
-    # 5. خزّن reference في session
-    request.session["opay_reference"] = result.get("reference")
-    request.session["checkout_address"] = {
+    # 5. خزّن reference وبيانات الشحن في الموديل الجديد (بدلاً من الـ Session) <=== التعديل هنا
+    opay_reference = result.get("reference")
+
+    # تخزين بيانات الشحن لتستخدم لاحقاً في الـ webhook
+    checkout_data = {
         "customer_phone": request.data.get("customer_phone"),
         "governorate": request.data.get("governorate"),
         "city": request.data.get("city"),
@@ -175,25 +175,32 @@ def initiate_payment(request):
         "apartment_number": request.data.get("apartment_number"),
         "landmark": request.data.get("landmark"),
     }
-    request.session.save()
+
+    # إنشاء سجل المعاملة الدائم
+    PaymentTransaction.objects.create(
+        opay_reference=opay_reference,
+        cart=cart,
+        checkout_address_json=checkout_data,
+        status="PENDING",
+    )
 
     return Response(result)
 
 
+# ----------------------------------------------------------------------------------------------------------------------
 
 
 @csrf_exempt
 @api_view(["POST"])
 def opay_webhook(request):
     """
-    Production-ready OPay webhook handler using print for logs
+    Production-ready OPay webhook handler using PaymentTransaction model
     """
     print("🔔 OPay Webhook Received:", request.data, file=sys.stderr)
-    print(
-        "Backend URL is:",
-        f"{settings.BACKEND_URL}/api/payment/callback/",
-        file=sys.stderr,
-    )
+
+    # التحقق من الـ Signature (خطوة أمان يجب إضافتها لاحقاً)
+    # sha512 = request.data.get("sha512")
+    # إذا كانت Opay تتطلب التحقق من التوقيع، يجب تطبيقه هنا قبل أي شيء.
 
     # الحصول على payload
     payload = request.data.get("payload", {})
@@ -208,6 +215,25 @@ def opay_webhook(request):
         print("⚠️ Missing reference in webhook", file=sys.stderr)
         return Response({"error": "Missing reference"}, status=400)
 
+    # 1. البحث عن الـ PaymentTransaction المرتبط بالـ reference <=== التعديل هنا
+    try:
+        transaction = PaymentTransaction.objects.get(opay_reference=reference)
+    except PaymentTransaction.DoesNotExist:
+        print(
+            f"❌ PaymentTransaction not found for reference {reference}",
+            file=sys.stderr,
+        )
+        return Response({"error": "Payment reference not found."}, status=404)
+
+    # لو تم معالجة الطلب بالفعل، تجاهله
+    if transaction.status == "SUCCESS":
+        print(f"ℹ️ Transaction already processed: {reference}", file=sys.stderr)
+        return Response({"status": "Already processed"})
+
+    # تحديث حالة المعاملة
+    transaction.status = status
+    transaction.save()
+
     if status != "SUCCESS":
         print(
             f"ℹ️ Payment not successful, status={status}, reference={reference}",
@@ -215,26 +241,21 @@ def opay_webhook(request):
         )
         return Response({"status": f"Ignored (status={status})"})
 
-    # البحث عن الـ session المرتبط بالـ reference
-    cart = None
-    user = None
-    checkout_address = None
-
-    for session in Session.objects.all():
-        s_data = session.get_decoded()
-        if s_data.get("opay_reference") == reference:
-            user_id = s_data.get("_auth_user_id")
-            checkout_address = s_data.get("checkout_address")
-            User = get_user_model()
-            user = User.objects.filter(id=user_id).first()
-            cart = Cart.objects.filter(user=user).first()
-            break
+    # 2. استخراج البيانات من الـ Transaction <=== التعديل هنا
+    cart = transaction.cart
+    checkout_address = transaction.checkout_address_json
 
     if not cart:
-        print(f"❌ Cart not found for reference {reference}", file=sys.stderr)
-        return Response({"error": "Cart not found for this payment."}, status=404)
+        # لو الكارت اتحذف لسبب ما قبل Webhook
+        print(
+            f"❌ Cart not found in transaction for reference {reference}",
+            file=sys.stderr,
+        )
+        return Response({"error": "Associated cart not found."}, status=404)
 
-    # إنشاء الأوردر
+    user = cart.user  # لو كان المستخدم مسجل دخوله
+
+    # 3. إنشاء الأوردر
     order = Order.objects.create(
         user=user,
         customer_phone=checkout_address.get("customer_phone"),
@@ -268,10 +289,15 @@ def opay_webhook(request):
     # تحديث الإجمالي والمخزون
     order.total_amount = total_amount
     order.save()
+
+    # حذف محتويات الكارت فقط، وليس الكارت نفسه
     cart.items.all().delete()
 
     for variant in products_to_update:
         variant.save()
+
+    # 4. حذف سجل المعاملة بعد نجاح إنشاء الأوردر
+    transaction.delete()
 
     print(
         f"✅ Order created successfully for reference {reference}, order_id={order.id}",
