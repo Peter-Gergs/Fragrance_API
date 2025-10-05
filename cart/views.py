@@ -105,14 +105,14 @@ def delete_cart_item(request, item_id):
 
 @api_view(["POST"])
 def initiate_payment(request):
+    print("🔔 Data received from Checkout Form:", request.data, file=sys.stderr)
     cart = get_or_create_cart(request)
     cart_items = cart.items.all()
 
     if not cart_items.exists():
         return Response({"error": "Cart is empty."}, status=400)
 
-    # 1. احسب الإجمالي
-    # ... (الكود كما هو)
+    # 1. احسب الإجمالي (الكود كما هو)
     subtotal = sum(
         (item.variant.price - (item.variant.discount or 0)) * item.quantity
         for item in cart_items
@@ -122,10 +122,8 @@ def initiate_payment(request):
     shipping_cost = shipping_setting.cost if shipping_setting else 0
     total_amount = subtotal + shipping_cost
     amount = int(total_amount * 100)
-    print(amount)
 
     # 2. بيانات العميل
-    # ... (الكود كما هو)
     if request.user.is_authenticated:
         user_info = {
             "userId": str(request.user.id),
@@ -143,7 +141,6 @@ def initiate_payment(request):
         }
 
     # 3. المنتجات
-    # ... (الكود كما هو)
     product_list = []
     for item in cart_items:
         product_list.append(
@@ -168,19 +165,33 @@ def initiate_payment(request):
 
     opay_reference = result.get("reference")
 
-    # === التحقق من وجود الـ reference قبل المتابعة ===
+    # === 4. التحقق من الـ reference ===
     if not opay_reference:
         error_message = result.get(
             "error", "Payment processing failed. Please try again."
         )
-        # نرجع 400 Bad Request بدلاً من 500 Internal Error
         return Response({"error": error_message}, status=status.HTTP_400_BAD_REQUEST)
     # ===============================================
 
     # 5. خزّن reference وبيانات الشحن في الموديل الجديد
+    # 💥💥 تأكيد ملء بيانات العنوان من الـ request.data 💥💥
     checkout_data = {
-        # ... (بيانات الشحن) ...
+        "customer_phone": request.data.get("customer_phone"),
+        "governorate": request.data.get("governorate"),
+        "city": request.data.get("city"),
+        "street": request.data.get("street"),
+        "building_number": request.data.get("building_number"),
+        "floor_number": request.data.get("floor_number"),
+        "apartment_number": request.data.get("apartment_number"),
+        "landmark": request.data.get("landmark"),
     }
+
+    # 💥💥 خطوة الأمان: التحقق الإجباري من الهاتف 💥💥
+    if not checkout_data.get("customer_phone"):
+        return Response(
+            {"error": "Customer phone is required for checkout."}, 
+            status=status.HTTP_400_BAD_REQUEST
+        )
 
     # إنشاء سجل المعاملة الدائم
     PaymentTransaction.objects.create(
