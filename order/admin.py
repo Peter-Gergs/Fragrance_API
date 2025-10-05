@@ -6,16 +6,13 @@ from .models import Order, OrderItem, ShippingSetting, PendingOrder
 class OrderItemInline(admin.TabularInline):
     model = OrderItem
     extra = 0
-    readonly_fields = ("product_name", "variant_name", "quantity", "price")
+    readonly_fields = ["display_variant", "name", "quantity", "price"]
+    fields = ["display_variant", "name", "quantity", "price"]
 
-    def product_name(self, obj):
-        return obj.product.name if obj.product else "-"
+    def display_variant(self, obj):
+        return obj.variant.name if obj.variant else "-"
 
-    def variant_name(self, obj):
-        return obj.name or "-"
-
-    product_name.short_description = "Product"
-    variant_name.short_description = "Variant"
+    display_variant.short_description = "Variant"
 
 
 # ✅ تحسين شكل عرض الطلبات في لوحة الأدمن
