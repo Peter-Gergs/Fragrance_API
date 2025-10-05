@@ -18,9 +18,8 @@ urlpatterns = [
     # Pending Order Flow
     # Payment Flow
     path("payment/pay/", views.initiate_payment, name="initiate_payment"),
-    path("payment/webhook/", csrf_exempt(views.opay_webhook), name="payment_webhook"),
-    path("payment/callback/", csrf_exempt(views.opay_webhook), name="payment_callback"),
+    path("payment/webhook", csrf_exempt(views.opay_webhook), name="payment_webhook"),
+    path("payment/callback", csrf_exempt(views.opay_webhook), name="payment_callback"),
 ]
 
 
-from django.views.generic.base import RedirectView
