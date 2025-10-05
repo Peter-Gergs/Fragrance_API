@@ -147,8 +147,6 @@ def initiate_payment(request):
     import sys
     print("Backend URL is:", f"{settings.BACKEND_URL}/api/payment/callback/", file=sys.stderr)
 
-    print("Backend URL is:", f"{settings.BACKEND_URL}/api/payment/callback/")
-
     # 4. استدعاء util
     result = create_cashier_payment(
         amount=amount,
@@ -177,12 +175,90 @@ def initiate_payment(request):
     return Response(result)
 
 
+# @csrf_exempt
+# @api_view(["POST"])
+# def opay_webhook(request):
+#     print("🔔 OPay Webhook Received:", request.data)
+
+#     # ✅ أولاً: ناخد البيانات الحقيقية من داخل "payload"
+#     payload = request.data.get("payload", {})
+#     if not payload:
+#         return Response({"error": "Missing payload"}, status=400)
+
+#     reference = payload.get("reference")
+#     status = payload.get("status")
+
+#     if not reference:
+#         return Response({"error": "Missing reference"}, status=400)
+
+#     if status != "SUCCESS":
+#         return Response({"status": f"Ignored (status={status})"})
+
+#     # ✅ نبحث عن الـ session اللي فيها reference ده
+#     cart = None
+#     user = None
+#     checkout_address = None
+
+#     for session in Session.objects.all():
+#         s_data = session.get_decoded()
+#         if s_data.get("opay_reference") == reference:
+#             user_id = s_data.get("_auth_user_id")
+#             checkout_address = s_data.get("checkout_address")
+#             User = get_user_model()
+#             user = User.objects.filter(id=user_id).first()
+#             cart = Cart.objects.filter(user=user).first()
+#             break
+
+#     if not cart:
+#         return Response({"error": "Cart not found for this payment."}, status=404)
+
+#     # ✅ إنشاء الأوردر
+#     order = Order.objects.create(
+#         user=user,
+#         customer_phone=checkout_address.get("customer_phone"),
+#         governorate=checkout_address.get("governorate"),
+#         city=checkout_address.get("city"),
+#         street=checkout_address.get("street"),
+#         building_number=checkout_address.get("building_number"),
+#         floor_number=checkout_address.get("floor_number"),
+#         apartment_number=checkout_address.get("apartment_number"),
+#         landmark=checkout_address.get("landmark"),
+#         total_amount=0,
+#         opay_reference=reference,
+#     )
+
+#     total_amount = Decimal("0.0")
+#     products_to_update = []
+
+#     for item in cart.items.select_related("variant").all():
+#         price = Decimal(item.variant.price) - Decimal(item.variant.discount or 0)
+#         total_amount += price * item.quantity
+#         OrderItem.objects.create(
+#             order=order,
+#             product=item.variant.product,
+#             name=item.variant.product.name,
+#             quantity=item.quantity,
+#             price=price,
+#         )
+#         item.variant.stock -= item.quantity
+#         products_to_update.append(item.variant)
+
+#     # ✅ حفظ الإجمالي وتحديث المخزون
+#     order.total_amount = total_amount
+#     order.save()
+#     cart.items.all().delete()
+
+#     for variant in products_to_update:
+#         variant.save()
+
+#     return Response({"status": "Order created successfully ✅"})
+
+
 @csrf_exempt
 @api_view(["POST"])
 def opay_webhook(request):
     print("🔔 OPay Webhook Received:", request.data)
 
-    # ✅ أولاً: ناخد البيانات الحقيقية من داخل "payload"
     payload = request.data.get("payload", {})
     if not payload:
         return Response({"error": "Missing payload"}, status=400)
@@ -196,61 +272,7 @@ def opay_webhook(request):
     if status != "SUCCESS":
         return Response({"status": f"Ignored (status={status})"})
 
-    # ✅ نبحث عن الـ session اللي فيها reference ده
-    cart = None
-    user = None
-    checkout_address = None
-
-    for session in Session.objects.all():
-        s_data = session.get_decoded()
-        if s_data.get("opay_reference") == reference:
-            user_id = s_data.get("_auth_user_id")
-            checkout_address = s_data.get("checkout_address")
-            User = get_user_model()
-            user = User.objects.filter(id=user_id).first()
-            cart = Cart.objects.filter(user=user).first()
-            break
-
-    if not cart:
-        return Response({"error": "Cart not found for this payment."}, status=404)
-
-    # ✅ إنشاء الأوردر
-    order = Order.objects.create(
-        user=user,
-        customer_phone=checkout_address.get("customer_phone"),
-        governorate=checkout_address.get("governorate"),
-        city=checkout_address.get("city"),
-        street=checkout_address.get("street"),
-        building_number=checkout_address.get("building_number"),
-        floor_number=checkout_address.get("floor_number"),
-        apartment_number=checkout_address.get("apartment_number"),
-        landmark=checkout_address.get("landmark"),
-        total_amount=0,
-        opay_reference=reference,
+    # هنا التجربة: نرجع كل حاجة بدل ما نعتمد على session
+    return Response(
+        {"status": "Webhook received", "reference": reference, "payload": payload}
     )
-
-    total_amount = Decimal("0.0")
-    products_to_update = []
-
-    for item in cart.items.select_related("variant").all():
-        price = Decimal(item.variant.price) - Decimal(item.variant.discount or 0)
-        total_amount += price * item.quantity
-        OrderItem.objects.create(
-            order=order,
-            product=item.variant.product,
-            name=item.variant.product.name,
-            quantity=item.quantity,
-            price=price,
-        )
-        item.variant.stock -= item.quantity
-        products_to_update.append(item.variant)
-
-    # ✅ حفظ الإجمالي وتحديث المخزون
-    order.total_amount = total_amount
-    order.save()
-    cart.items.all().delete()
-
-    for variant in products_to_update:
-        variant.save()
-
-    return Response({"status": "Order created successfully ✅"})
