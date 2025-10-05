@@ -143,6 +143,8 @@ def initiate_payment(request):
             }
         )
     print(product_list)
+    import sys
+    print("Backend URL is:", f"{settings.BACKEND_URL}/api/payment/callback/", file=sys.stderr)
 
     print("Backend URL is:", f"{settings.BACKEND_URL}/api/payment/callback/")
 
