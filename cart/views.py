@@ -189,8 +189,8 @@ def initiate_payment(request):
     # 💥💥 خطوة الأمان: التحقق الإجباري من الهاتف 💥💥
     if not checkout_data.get("customer_phone"):
         return Response(
-            {"error": "Customer phone is required for checkout."}, 
-            status=status.HTTP_400_BAD_REQUEST
+            {"error": "Customer phone is required for checkout."},
+            status=status.HTTP_400_BAD_REQUEST,
         )
 
     # إنشاء سجل المعاملة الدائم
@@ -305,6 +305,7 @@ def opay_webhook(request):
             name=item.variant.product.name,
             quantity=item.quantity,
             price=price,
+            variant=item.variant.size,
         )
         item.variant.stock -= item.quantity
         products_to_update.append(item.variant)
