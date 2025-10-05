@@ -7,8 +7,8 @@ from payment.utils import create_cashier_payment
 
 from product.models import Product
 from .serializer import OrderSerializer, OrderItemsSerializer
-from .models import Order, OrderItem,ShippingSetting
-
+from .models import Order, OrderItem, ShippingSetting
+from .serializer import ShippingSettingSerializer
 
 # Create your views here.
 
@@ -23,11 +23,14 @@ def get_orders(request):
 
 @api_view(["GET"])
 def get_shipping(request):
-    shipping = ShippingSetting.objects.first()
-    if shipping:
-        return Response({"cost": float(shipping.cost)})
-    else:
-        return Response({"cost": 30.00})  # Default if not set
+    # جلب جميع الكائنات من موديل ShippingSetting
+    shipping_settings = ShippingSetting.objects.all()
+
+    # استخدام Serializer لتحويل الـ QuerySet إلى JSON
+    serializer = ShippingSettingSerializer(shipping_settings, many=True)
+
+    # إرجاع قائمة الـ JSON
+    return Response(serializer.data)
 
 
 @api_view(["PUT"])
