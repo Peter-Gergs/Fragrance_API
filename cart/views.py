@@ -176,6 +176,7 @@ def initiate_payment(request):
     return Response(result)
 
 
+@csrf_exempt
 @api_view(["POST"])
 def opay_webhook(request):
     print("🔔 OPay Webhook Received:", request.data)
