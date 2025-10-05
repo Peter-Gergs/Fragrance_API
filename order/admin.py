@@ -60,7 +60,13 @@ class OrderAdmin(admin.ModelAdmin):
         return self.readonly_fields
 
 
+@admin.register(ShippingSetting)
+class ShippingSettingAdmin(admin.ModelAdmin):
+    list_display = ("governorate", "cost")
+    search_fields = ("governorate",)
+    list_editable = ("cost",)  # 🔹 يسمح بتعديل تكلفة الشحن مباشرة من الجدول
+
+
 # ✅ التسجيل في الأدمن
 admin.site.register(Order, OrderAdmin)
-admin.site.register(ShippingSetting)
 admin.site.register(PendingOrder)

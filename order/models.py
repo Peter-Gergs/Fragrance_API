@@ -62,7 +62,8 @@ class OrderItem(models.Model):
 
 
 class ShippingSetting(models.Model):
-    cost = models.DecimalField(max_digits=10, decimal_places=2, default=30.00)
+    governorate = models.CharField(max_length=100, unique=True)
+    cost = models.DecimalField(max_digits=10, decimal_places=2, default=60.00)
 
     def __str__(self):
         return f"Shipping Cost: {self.cost} EGP"
