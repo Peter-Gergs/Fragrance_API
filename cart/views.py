@@ -12,6 +12,7 @@ from product.models import ProductVariant
 from payment.utils import create_cashier_payment
 from django.contrib.sessions.models import Session
 from django.contrib.auth import get_user_model
+from django.views.decorators.csrf import csrf_exempt
 
 
 def get_or_create_cart(request):
