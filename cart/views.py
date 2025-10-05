@@ -146,9 +146,9 @@ def initiate_payment(request):
     result = create_cashier_payment(
         amount=amount,
         currency="EGP",
-        return_url=f"{settings.FRONTEND_URL}/payment/return",
-        cancel_url=f"{settings.FRONTEND_URL}/payment/cancel",
-        callback_url=f"{settings.BACKEND_URL}/api/payment/webhook",
+        return_url=f"{settings.FRONTEND_URL}/payment/return/",
+        cancel_url=f"{settings.FRONTEND_URL}/payment/cancel/",
+        callback_url=f"{settings.BACKEND_URL}/api/payment/webhook/",
         user_info=user_info,
         product_list=product_list,
     )
