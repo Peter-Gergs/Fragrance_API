@@ -6,7 +6,12 @@ from rest_framework import status
 from decimal import Decimal
 from django.conf import settings
 from .models import Cart, CartItem
-from order.models import Order, OrderItem, ShippingSetting
+from order.models import (
+    Order,
+    OrderItem,
+    ShippingSetting,
+    PaymentStatus,
+)  # <=== أضفنا PaymentStatus هنا
 from .serializers import CartSerializer
 from product.models import ProductVariant
 from payment.utils import create_cashier_payment
@@ -274,7 +279,7 @@ def opay_webhook(request):
         apartment_number=checkout_address.get("apartment_number"),
         landmark=checkout_address.get("landmark"),
         total_amount=0,
-        payment_status=Order.PaymentStatus.PAID,
+        payment_status=PaymentStatus.PAID,
     )
 
     total_amount = Decimal("0.0")
