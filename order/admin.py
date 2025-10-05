@@ -29,7 +29,7 @@ class OrderItemInline(admin.TabularInline):
 class OrderAdmin(admin.ModelAdmin):
     list_display = [
         "id",
-        "get_user_fullname",
+        "username",
         "user",
         "customer_phone",
         "city",
@@ -58,12 +58,6 @@ class OrderAdmin(admin.ModelAdmin):
         "order_status",
     ]
 
-    def get_user_fullname(self, obj):
-        if obj.user:
-            return f"{obj.user.first_name} {obj.user.last_name}"
-        return "Guest"
-
-    get_user_fullname.short_description = "Customer Name"
     search_fields = ["user__username", "customer_phone", "city"]  # 🔹 البحث السريع
     inlines = [OrderItemInline]
 

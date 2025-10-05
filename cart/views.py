@@ -281,6 +281,7 @@ def opay_webhook(request):
     # 3. إنشاء الأوردر
     order = Order.objects.create(
         user=user,
+        username=checkout_address.get("name"),
         customer_phone=checkout_address.get("customer_phone"),
         governorate=checkout_address.get("governorate"),
         city=checkout_address.get("city"),

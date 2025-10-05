@@ -18,6 +18,7 @@ class PaymentStatus(models.TextChoices):
 
 
 class Order(models.Model):
+    username = models.CharField(max_length=20, blank=True, null=True)
     # معلومات العميل
     user = models.ForeignKey(
         User, null=True, on_delete=models.SET_NULL, related_name="orders"
