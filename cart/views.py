@@ -184,6 +184,7 @@ def initiate_payment(request):
         "floor_number": request.data.get("floor_number"),
         "apartment_number": request.data.get("apartment_number"),
         "landmark": request.data.get("landmark"),
+        "name": request.data.get("name"),
     }
 
     # 💥💥 خطوة الأمان: التحقق الإجباري من الهاتف 💥💥
