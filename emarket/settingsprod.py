@@ -28,7 +28,7 @@ SECRET_KEY = "django-insecure-0w2(yk75b*$i33cfqb5+0@f3k-605^+&a%sc*w)$=j7c(&$$6q
 
 DEBUG = True
 
-ALLOWED_HOSTS = ["127.0.0.1", "api.3sfragrance.com", "localhost"]
+ALLOWED_HOSTS = ["52.232.22.140", "127.0.0.1", "api.3sfragrance.com", "localhost"]
 
 
 LANGUAGE_CODE = "en"
