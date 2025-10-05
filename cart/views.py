@@ -18,6 +18,7 @@ from payment.models import PaymentTransaction  # <=== تم الإضافة
 import json  # تم الإضافة
 import logging
 
+
 def get_or_create_cart(request):
     """ترجع الكارت سواء لليوزر أو للضيف"""
     if request.user.is_authenticated:
@@ -150,7 +151,6 @@ def initiate_payment(request):
             }
         )
 
-    # 4. استدعاء util
     result = create_cashier_payment(
         amount=amount,
         currency="EGP",
@@ -161,19 +161,20 @@ def initiate_payment(request):
         product_list=product_list,
     )
 
-    # 5. خزّن reference وبيانات الشحن في الموديل الجديد (بدلاً من الـ Session) <=== التعديل هنا
     opay_reference = result.get("reference")
 
-    # تخزين بيانات الشحن لتستخدم لاحقاً في الـ webhook
+    # === التحقق من وجود الـ reference قبل المتابعة ===
+    if not opay_reference:
+        error_message = result.get(
+            "error", "Payment processing failed. Please try again."
+        )
+        # نرجع 400 Bad Request بدلاً من 500 Internal Error
+        return Response({"error": error_message}, status=status.HTTP_400_BAD_REQUEST)
+    # ===============================================
+
+    # 5. خزّن reference وبيانات الشحن في الموديل الجديد
     checkout_data = {
-        "customer_phone": request.data.get("customer_phone"),
-        "governorate": request.data.get("governorate"),
-        "city": request.data.get("city"),
-        "street": request.data.get("street"),
-        "building_number": request.data.get("building_number"),
-        "floor_number": request.data.get("floor_number"),
-        "apartment_number": request.data.get("apartment_number"),
-        "landmark": request.data.get("landmark"),
+        # ... (بيانات الشحن) ...
     }
 
     # إنشاء سجل المعاملة الدائم
@@ -184,7 +185,13 @@ def initiate_payment(request):
         status="PENDING",
     )
 
-    return Response(result)
+    # نرجع فقط بيانات النجاح
+    return Response(
+        {
+            "reference": result.get("reference"),
+            "redirect_url": result.get("redirect_url"),
+        }
+    )
 
 
 # ----------------------------------------------------------------------------------------------------------------------
