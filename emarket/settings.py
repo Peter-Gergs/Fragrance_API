@@ -28,11 +28,7 @@ SECRET_KEY = "django-insecure-0w2(yk75b*$i33cfqb5+0@f3k-605^+&a%sc*w)$=j7c(&$$6q
 
 DEBUG = True
 
-ALLOWED_HOSTS = [
-    "127.0.0.1",
-    "api.3sfragrance.com",
-    "localhost"
-]
+ALLOWED_HOSTS = ["127.0.0.1", "api.3sfragrance.com", "localhost"]
 
 
 LANGUAGE_CODE = "en"
@@ -183,8 +179,8 @@ AUTH_PASSWORD_VALIDATORS = [
 
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:5173",
-    "https://future-vesta.com",
-    "https://www.future-vesta.com",
+    "https://3sfragrance.com",
+    "https://www.3sfragrance.com",
 ]
 
 CORS_ALLOW_CREDENTIALS = True
@@ -242,7 +238,11 @@ CSRF_COOKIE_SECURE = False
 CORS_ALLOW_CREDENTIALS = True
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:5173",
+    "https://3sfragrance.com",
+    "https://www.3sfragrance.com",
 ]
 CSRF_TRUSTED_ORIGINS = [
     "http://localhost:5173",
+    "https://3sfragrance.com",
+    "https://www.3sfragrance.com",
 ]

@@ -238,7 +238,11 @@ CSRF_COOKIE_SECURE = False
 CORS_ALLOW_CREDENTIALS = True
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:5173",
+    "https://3sfragrance.com",
+    "https://www.3sfragrance.com",
 ]
 CSRF_TRUSTED_ORIGINS = [
     "http://localhost:5173",
+    "https://3sfragrance.com",
+    "https://www.3sfragrance.com",
 ]
