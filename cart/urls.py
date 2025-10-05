@@ -17,7 +17,6 @@ urlpatterns = [
     # Pending Order Flow
     # Payment Flow
     path("payment/pay/", views.initiate_payment, name="initiate_payment"),
-    path(
-        "payment/callback/", views.opay_webhook, name="payment_webhook"
-    ),  # Paymob webhook
+    path("payment/webhook/", views.opay_webhook, name="payment_webhook"),
+    path("payment/callback/", views.opay_webhook, name="payment_callback"),
 ]
