@@ -144,6 +144,8 @@ def initiate_payment(request):
         )
     print(product_list)
 
+    print("Backend URL is:", f"{settings.BACKEND_URL}/api/payment/callback/")
+
     # 4. استدعاء util
     result = create_cashier_payment(
         amount=amount,
