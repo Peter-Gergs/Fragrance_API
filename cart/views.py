@@ -172,23 +172,23 @@ def initiate_payment(request):
 
 @api_view(["POST"])
 def opay_webhook(request):
-    """
-    يستقبل إشعار الدفع من OPay.
-    لو الدفع ناجح → ينشئ Order وينقل العناصر من الكارت.
-    """
-    data = request.data
-    print("🔔 OPay Webhook Received:", data)
+    print("🔔 OPay Webhook Received:", request.data)
 
-    if data.get("status") != "SUCCESS":
-        return Response({"status": "Ignored (not successful)"})
+    # ✅ أولاً: ناخد البيانات الحقيقية من داخل "payload"
+    payload = request.data.get("payload", {})
+    if not payload:
+        return Response({"error": "Missing payload"}, status=400)
 
-    reference = data.get("reference")
+    reference = payload.get("reference")
+    status = payload.get("status")
+
     if not reference:
-        return Response({"error": "Missing reference."}, status=400)
+        return Response({"error": "Missing reference"}, status=400)
 
-    # 🔍 البحث عن الـ session اللي فيها reference ده
-    from django.contrib.sessions.models import Session
+    if status != "SUCCESS":
+        return Response({"status": f"Ignored (status={status})"})
 
+    # ✅ نبحث عن الـ session اللي فيها reference ده
     cart = None
     user = None
     checkout_address = None
@@ -198,8 +198,6 @@ def opay_webhook(request):
         if s_data.get("opay_reference") == reference:
             user_id = s_data.get("_auth_user_id")
             checkout_address = s_data.get("checkout_address")
-            from django.contrib.auth import get_user_model
-
             User = get_user_model()
             user = User.objects.filter(id=user_id).first()
             cart = Cart.objects.filter(user=user).first()
@@ -208,7 +206,7 @@ def opay_webhook(request):
     if not cart:
         return Response({"error": "Cart not found for this payment."}, status=404)
 
-    # 🧾 إنشاء Order
+    # ✅ إنشاء الأوردر
     order = Order.objects.create(
         user=user,
         customer_phone=checkout_address.get("customer_phone"),
@@ -239,10 +237,11 @@ def opay_webhook(request):
         item.variant.stock -= item.quantity
         products_to_update.append(item.variant)
 
-    # 🧮 حفظ الإجمالي وتحديث المخزون
+    # ✅ حفظ الإجمالي وتحديث المخزون
     order.total_amount = total_amount
     order.save()
     cart.items.all().delete()
+
     for variant in products_to_update:
         variant.save()
 
