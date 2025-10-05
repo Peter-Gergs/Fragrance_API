@@ -58,6 +58,7 @@ INSTALLED_APPS = [
     "order.apps.OrderConfig",
     "cart.apps.CartConfig",
     "contact.apps.ContactConfig",
+    "payment.apps.PaymentConfig",
     "django_filters",
     "corsheaders",
     "rest_framework_simplejwt.token_blacklist",
@@ -246,5 +247,3 @@ CSRF_TRUSTED_ORIGINS = [
     "https://3sfragrance.com",
     "https://www.3sfragrance.com",
 ]
-
-
