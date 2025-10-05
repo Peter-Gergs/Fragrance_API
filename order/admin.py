@@ -2,67 +2,69 @@ from django.contrib import admin
 from .models import Order, OrderItem, ShippingSetting, PendingOrder
 
 
-# ✅ عشان نشوف الطلبات الفرعية داخل كل طلب
+# ✅ OrderItem Inline للعرض في صفحة الطلب
 class OrderItemInline(admin.TabularInline):
     model = OrderItem
     extra = 0
-
-    # ✅ هنا يجب أن نستخدم دالة display_variant لتحديد الحقول للقراءة فقط
-    # يجب أن تكون الحقول في fields مطابقة للحقول في readonly_fields
-    readonly_fields = ["display_variant", "name", "quantity", "price"]
-    fields = ["display_variant", "name", "quantity", "price"]
+    # نعتمد على دالة display_variant لعرض المنتج والـ Variant
+    readonly_fields = ["display_variant", "quantity", "price"]
+    fields = ["display_variant", "quantity", "price"]
 
     def display_variant(self, obj):
-        # 💡 هذا الكود يعرض اسم المنتج الأساسي + حجم العبوة (size_ml)
-        if obj.variant:
-            # الوصول لاسم المنتج عبر obj.variant.product.name
-            # الوصول للحجم عبر obj.variant.size_ml
-            return f"{obj.name} - {obj.variant.size_ml} ml"
+        # ✅ استخدام الـ Snapshots لضمان عدم الانهيار
+        product_name = obj.product_name_snapshot or obj.name
+        details = obj.variant_details_snapshot or ""
 
-        # في حال تم حذف الـ Variant أو لم يتم ربطه
-        return obj.name
+        # لو لم يتم حفظ الـ Snapshot (طلبات قديمة)، نرجع للقراءة المباشرة
+        if not product_name and obj.variant:
+            product_name = obj.variant.product.name
+            details = f"{obj.variant.size_ml} ml"
 
-    display_variant.short_description = "Product/Size (ml)"
+        return f"{product_name} ({details})"
+
+    display_variant.short_description = "Product/Variant (ml)"
 
 
 # ✅ تحسين شكل عرض الطلبات في لوحة الأدمن
 class OrderAdmin(admin.ModelAdmin):
     list_display = [
         "id",
-        "username",
-        "user",
+        "get_user_fullname",  # يعرض الاسم الكامل أو اسم العميل الضيف
+        "username",  # حقل اسم العميل الضيف
+        "user",  # رابط المستخدم المسجل
         "customer_phone",
         "city",
         "total_amount",
         "payment_status",
         "order_status",
         "created_at",
-    ]  # 🔹 دول الأعمدة اللي هتظهر قدامك في جدول الطلبات
+    ]
     list_filter = [
         "payment_status",
         "order_status",
         "city",
-    ]  # 🔹 فلترة الطلبات حسب الحالات
-    fields = [
-        "user",  # 👈 نحطه أول واحد
-        "customer_phone",
-        "governorate",
-        "city",
-        "street",
-        "building_number",
-        "floor_number",
-        "apartment_number",
-        "landmark",
-        "total_amount",
-        "payment_status",
-        "order_status",
     ]
+    # ... (بقية الحقول)
 
-    search_fields = ["user__username", "customer_phone", "city"]  # 🔹 البحث السريع
+    # ✅ دالة مخصصة لعرض اسم العميل (مسجل أو ضيف)
+    def get_user_fullname(self, obj):
+        if obj.user and obj.user.first_name:
+            return f"{obj.user.first_name} {obj.user.last_name}"
+        if obj.username:
+            return obj.username
+        return "Guest"
+
+    get_user_fullname.short_description = "Customer Name"
+    search_fields = [
+        "user__username",
+        "customer_phone",
+        "city",
+        "username",
+    ]  # ✅ إضافة username للبحث
     inlines = [OrderItemInline]
 
     def get_readonly_fields(self, request, obj=None):
-        if obj:  # يعني في حالة التعديل مش الإنشاء
+        if obj:
             return self.readonly_fields + ("user", "total_amount")
         return self.readonly_fields
 
@@ -71,7 +73,7 @@ class OrderAdmin(admin.ModelAdmin):
 class ShippingSettingAdmin(admin.ModelAdmin):
     list_display = ("governorate", "cost")
     search_fields = ("governorate",)
-    list_editable = ("cost",)  # 🔹 يسمح بتعديل تكلفة الشحن مباشرة من الجدول
+    list_editable = ("cost",)
 
 
 # ✅ التسجيل في الأدمن
