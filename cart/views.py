@@ -305,7 +305,7 @@ def opay_webhook(request):
             name=item.variant.product.name,
             quantity=item.quantity,
             price=price,
-            variant=item.variant.size,
+            variant=item.variant,
         )
         item.variant.stock -= item.quantity
         products_to_update.append(item.variant)
