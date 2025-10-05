@@ -14,6 +14,7 @@ from django.contrib.sessions.models import Session
 from django.contrib.auth import get_user_model
 from django.views.decorators.csrf import csrf_exempt
 import sys
+import logging
 
 
 def get_or_create_cart(request):
@@ -261,16 +262,9 @@ def initiate_payment(request):
 @csrf_exempt
 @api_view(["POST"])
 def opay_webhook(request):
-    print(
-        "🔔 OPay Webhook Received:",
-        request.data,
-        file=sys.stderr,
-    )
-    print(
-        "Backend URL is:",
-        f"{settings.BACKEND_URL}/api/payment/callback/",
-        file=sys.stderr,
-    )
+    logger = logging.getLogger(__name__)
+
+    logger.info("🔔 OPay Webhook Received: %s", request.data)
 
     payload = request.data.get("payload", {})
     if not payload:
