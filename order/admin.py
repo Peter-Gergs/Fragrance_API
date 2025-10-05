@@ -48,7 +48,9 @@ class OrderAdmin(admin.ModelAdmin):
     ]
 
     def get_user_fullname(self, obj):
-        return f"{obj.user.first_name} {obj.user.last_name}"
+        if obj.user:
+            return f"{obj.user.first_name} {obj.user.last_name}"
+        return "Guest"
 
     get_user_fullname.short_description = "Customer Name"
     search_fields = ["user__username", "customer_phone", "city"]  # 🔹 البحث السريع
