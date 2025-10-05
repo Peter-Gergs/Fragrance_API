@@ -13,10 +13,7 @@ https://docs.djangoproject.com/en/5.2/ref/settings/
 from datetime import timedelta
 from pathlib import Path
 import os
-from dotenv import load_dotenv
 
-
-load_dotenv()
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -25,21 +22,14 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = os.environ.get("SECRET_KEY", "y")
+SECRET_KEY = "django-insecure-0w2(yk75b*$i33cfqb5+0@f3k-605^+&a%sc*w)$=j7c(&$$6q"
 
 # SECURITY WARNING: don't run with debug turned on in production!
 
 DEBUG = True
 
-ALLOWED_HOSTS = [
-    "127.0.0.1",
-    "api.3sfragrance.com",
-]
+ALLOWED_HOSTS = ["127.0.0.1", "api.3sfragrance.com", "localhost"]
 
-LANGUAGES = [
-    ("en", "English"),
-    ("ar", "Arabic"),
-]
 
 LANGUAGE_CODE = "en"
 USE_I18N = True
@@ -47,11 +37,10 @@ USE_I18N = True
 OPAY_MERCHANT_ID = "281825080619553"
 OPAY_PUBLIC_KEY = "OPAYPUB17544756341740.2485347026738518"
 OPAY_SECRET_KEY = "OPAYPRV17544756341740.13079928036916444"
-
+OPAY_ENV = "sandbox"
 
 FRONTEND_URL = "https://www.3sfragrance.com"
 BACKEND_URL = "https://api.3sfragrance.com"
-
 # Application definition
 
 INSTALLED_APPS = [
@@ -76,7 +65,7 @@ INSTALLED_APPS = [
 
 JAZZMIN_SETTINGS = {
     "site_title": "Shop Dashboard",
-    "site_brand": "3s Fragrance",
+    "site_brand": "Future",
     "welcome_sign": "Welcome to Dashboard",
     "site_logo": "images/logo.png",
     "show_sidebar": True,
@@ -144,18 +133,16 @@ WSGI_APPLICATION = "emarket.wsgi.application"
 # Database
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
 
-
 DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.postgresql",
         "NAME": "fragrance_db",
-        "USER": "fragrance_admin",
-        "PASSWORD": os.environ.get("DB_PASSWORD", ""),
+        "USER": "postgres",
+        "PASSWORD": "Soft2022@postgre",
         "HOST": "localhost",
         "PORT": "5432",
     }
 }
-
 
 REST_FRAMEWORK = {
     "DEFAULT_AUTHENTICATION_CLASSES": (
@@ -164,7 +151,7 @@ REST_FRAMEWORK = {
 }
 
 SIMPLE_JWT = {
-    "ACCESS_TOKEN_LIFETIME": timedelta(minutes=15),
+    "ACCESS_TOKEN_LIFETIME": timedelta(hours=1),
     "REFRESH_TOKEN_LIFETIME": timedelta(days=30),
     "ROTATE_REFRESH_TOKENS": True,
     "BLACKLIST_AFTER_ROTATION": True,
@@ -192,20 +179,11 @@ AUTH_PASSWORD_VALIDATORS = [
 
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:5173",
-    "https://3sfragrance.com",
-    "https://www.3sfragrance.com",
-    "http://api.3sfragrance.com",
+    "https://future-vesta.com",
+    "https://www.future-vesta.com",
 ]
 
 CORS_ALLOW_CREDENTIALS = True
-
-
-CSRF_TRUSTED_ORIGINS = [
-    "https://api.3sfragrance.com",
-    "https://3sfragrance.com",
-    "https://www.3sfragrance.com",
-]
-
 
 REST_FRAMEWORK = {
     "DEFAULT_RENDERER_CLASSES": [
@@ -239,6 +217,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 STATIC_URL = "/static/"
 
 STATIC_ROOT = os.path.join(BASE_DIR, "static")
+
 MEDIA_URL = "/media/"
 MEDIA_ROOT = os.path.join(BASE_DIR, "media")
 
@@ -246,3 +225,20 @@ MEDIA_ROOT = os.path.join(BASE_DIR, "media")
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
+
+SESSION_COOKIE_NAME = "sessionid"
+SESSION_ENGINE = "django.contrib.sessions.backends.db"
+
+SESSION_COOKIE_SAMESITE = None  # ملاحظة: None بدون كوتيشن في Django 5.2+
+SESSION_COOKIE_SECURE = False
+
+CSRF_COOKIE_SAMESITE = None
+CSRF_COOKIE_SECURE = False
+
+CORS_ALLOW_CREDENTIALS = True
+CORS_ALLOWED_ORIGINS = [
+    "http://localhost:5173",
+]
+CSRF_TRUSTED_ORIGINS = [
+    "http://localhost:5173",
+]
