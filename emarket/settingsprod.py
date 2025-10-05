@@ -179,8 +179,8 @@ AUTH_PASSWORD_VALIDATORS = [
 
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:5173",
-    "https://future-vesta.com",
-    "https://www.future-vesta.com",
+    "https://3sfragrance.com",
+    "https://www.3sfragrance.com",
 ]
 
 CORS_ALLOW_CREDENTIALS = True
