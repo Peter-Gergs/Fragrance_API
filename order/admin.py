@@ -6,12 +6,16 @@ from .models import Order, OrderItem, ShippingSetting, PendingOrder
 class OrderItemInline(admin.TabularInline):
     model = OrderItem
     extra = 0
-    readonly_fields = [
-        "product",
-        "name",
-        "quantity",
-        "price",
-    ]  # 🔹 خلتهم للعرض فقط (اختياري)
+    readonly_fields = ("product_name", "variant_name", "quantity", "price")
+
+    def product_name(self, obj):
+        return obj.product.name if obj.product else "-"
+
+    def variant_name(self, obj):
+        return obj.name or "-"
+
+    product_name.short_description = "Product"
+    variant_name.short_description = "Variant"
 
 
 # ✅ تحسين شكل عرض الطلبات في لوحة الأدمن
