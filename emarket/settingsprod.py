@@ -246,3 +246,6 @@ CSRF_TRUSTED_ORIGINS = [
     "https://3sfragrance.com",
     "https://www.3sfragrance.com",
 ]
+
+
+APPEND_SLASH = False
