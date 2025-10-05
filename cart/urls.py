@@ -18,6 +18,6 @@ urlpatterns = [
     # Payment Flow
     path("payment/pay/", views.initiate_payment, name="initiate_payment"),
     path(
-        "payment/webhook/", views.opay_webhook, name="payment_webhook"
+        "payment/callback/", views.opay_webhook, name="payment_webhook"
     ),  # Paymob webhook
 ]
