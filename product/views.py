@@ -128,16 +128,25 @@ def flash_sale_swiper(request):
 
 @api_view(["GET"])
 def get_all_categories(request):
-    categories = Category.objects.all().values(
-        "id",
-        "name",
-        "slug",
-        "image",
-        "is_special",
-        "special_title",
-        "special_description",
-    )
-    return Response(list(categories))
+    categories = Category.objects.all()
+    data = []
+
+    for cat in categories:
+        data.append(
+            {
+                "id": cat.id,
+                "name": cat.name,
+                "slug": cat.slug,
+                "is_special": cat.is_special,
+                "special_title": cat.special_title,
+                "special_description": cat.special_description,
+                "image": (
+                    request.build_absolute_uri(cat.image.url) if cat.image else None
+                ),
+            }
+        )
+
+    return Response(data)
 
 
 @api_view(["GET"])
