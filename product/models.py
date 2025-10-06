@@ -6,9 +6,10 @@ from django.contrib.auth.models import User
 # Create your models here.
 class Category(models.Model):
     name = models.CharField(max_length=100, unique=True)
+    short_description = models.CharField(max_length=100, blank=True, null=True)
     slug = models.SlugField(max_length=120, unique=True, blank=True)
     image = models.ImageField(upload_to="category_images/", blank=True, null=True)
-    is_special = models.BooleanField(default=False)  
+    is_special = models.BooleanField(default=False)
     special_title = models.CharField(max_length=100, blank=True, null=True)
     special_description = models.CharField(max_length=100, blank=True, null=True)
 
