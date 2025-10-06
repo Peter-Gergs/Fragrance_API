@@ -123,8 +123,12 @@ def initiate_payment(request):
         ).first()
         or ShippingSetting.objects.first()
     )
-    shipping_cost = shipping_setting.cost if shipping_setting else 0
-    total_amount = subtotal + shipping_cost
+    shipping_cost = shipping_setting.cost if shipping_setting else 65
+    total_amount = (
+        (shipping_cost)
+        if (request.data.get("method") == "cash")
+        else (subtotal + shipping_cost)
+    )
     amount = int(total_amount * 100)
 
     # 2. بيانات العميل
