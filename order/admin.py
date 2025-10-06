@@ -11,16 +11,20 @@ class OrderItemInline(admin.TabularInline):
     fields = ["display_variant", "quantity", "price"]
 
     def display_variant(self, obj):
-        # ✅ استخدام الـ Snapshots لضمان عدم الانهيار
-        product_name = obj.product_name_snapshot or obj.name
-        details = obj.variant_details_snapshot or ""
+    # نحاول نجيب الاسم من snapshot أو من العلاقة أو من الحقل القديم
+        product_name = (
+            obj.product_name_snapshot
+            or getattr(obj.variant, "product", None) and obj.variant.product.name
+            or getattr(obj, "name", None)
+            or "—"
+        )
 
-        # لو لم يتم حفظ الـ Snapshot (طلبات قديمة)، نرجع للقراءة المباشرة
-        if not product_name and obj.variant:
-            product_name = obj.variant.product.name
-            details = f"{obj.variant.size_ml} ml"
+        details = (
+            obj.variant_details_snapshot
+            or (f"{getattr(obj.variant, 'size_ml', '')} ml" if getattr(obj, 'variant', None) else "")
+        )
 
-        return f"{product_name} ({details})"
+        return f"{product_name} ({details})".strip()
 
     display_variant.short_description = "Product/Variant (ml)"
 
