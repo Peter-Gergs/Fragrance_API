@@ -71,12 +71,15 @@ class CategoryAdmin(admin.ModelAdmin):
     prepopulated_fields = {"slug": ("name",)}
     readonly_fields = ("preview_image",)
     fieldsets = (
-        ("Basic Info", {"fields": ("name", "slug", "image", "preview_image")}),
+        (
+            "Basic Info",
+            {"fields": ("name", "slug", "short_description", "image", "preview_image")},
+        ),
         (
             "Special Section",
             {
                 "fields": ("is_special", "special_title", "special_description"),
-                "classes": ("collapse",), 
+                "classes": ("collapse",),
             },
         ),
     )
