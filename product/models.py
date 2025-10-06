@@ -7,9 +7,13 @@ from django.contrib.auth.models import User
 class Category(models.Model):
     name = models.CharField(max_length=100, unique=True)
     slug = models.SlugField(max_length=120, unique=True, blank=True)
+    image = models.ImageField(upload_to="category_images/", blank=True, null=True)
+    is_special = models.BooleanField(default=False)  
+    special_title = models.CharField(max_length=100, blank=True, null=True)
+    special_description = models.CharField(max_length=100, blank=True, null=True)
 
     class Meta:
-        verbose_name_plural = "Categories"  # 👈 هنا التصحيح
+        verbose_name_plural = "Categories"
 
     def __str__(self):
         return self.name
@@ -31,7 +35,6 @@ class Product(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     addedBy = models.ForeignKey(User, null=True, on_delete=models.SET_NULL)
 
-
     def __str__(self):
         return self.name
 
@@ -51,8 +54,9 @@ class ProductVariant(models.Model):
     discount = models.DecimalField(
         max_digits=6, decimal_places=2, null=True, blank=True
     )
-    withbox = models.BooleanField(default=False) 
-    travelsize = models.BooleanField(default=False) 
+    withbox = models.BooleanField(default=False)
+    travelsize = models.BooleanField(default=False)
+
     class Meta:
         ordering = ["size_ml"]
 

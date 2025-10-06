@@ -29,7 +29,7 @@ def get_all_products(request):
 def get_swiper_products(request):
     products = Product.objects.all().order_by("id")[:10]
     serializer = ProductSerializer(products, many=True, context={"request": request})
-    return Response(serializer.data) 
+    return Response(serializer.data)
 
 
 @api_view(["GET"])
@@ -128,7 +128,15 @@ def flash_sale_swiper(request):
 
 @api_view(["GET"])
 def get_all_categories(request):
-    categories = Category.objects.all().values("id", "name", "name_ar", "slug")
+    categories = Category.objects.all().values(
+        "id",
+        "name",
+        "slug",
+        "image",
+        "is_special",
+        "special_title",
+        "special_description",
+    )
     return Response(list(categories))
 
 

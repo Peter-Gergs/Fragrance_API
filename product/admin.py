@@ -62,7 +62,36 @@ class ProductAdmin(admin.ModelAdmin):
 
 # --- Register models ---
 admin.site.register(Product, ProductAdmin)
-admin.site.register(Category)
+
+
+class CategoryAdmin(admin.ModelAdmin):
+    list_display = ("name", "is_special", "preview_image")
+    list_filter = ("is_special",)
+    search_fields = ("name",)
+    prepopulated_fields = {"slug": ("name",)}
+    readonly_fields = ("preview_image",)
+    fieldsets = (
+        ("Basic Info", {"fields": ("name", "slug", "image", "preview_image")}),
+        (
+            "Special Section",
+            {
+                "fields": ("is_special", "special_title", "special_description"),
+                "classes": ("collapse",), 
+            },
+        ),
+    )
+
+    def preview_image(self, obj):
+        if obj.image:
+            return mark_safe(
+                f'<img src="{obj.image.url}" width="100" style="border-radius:8px" />'
+            )
+        return "No image"
+
+    preview_image.short_description = "Preview"
+
+
+admin.site.register(Category, CategoryAdmin)
 
 # Custom Admin Site
 admin.site.site_header = "3S Fragrance"
