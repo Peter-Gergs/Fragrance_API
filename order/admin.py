@@ -40,8 +40,6 @@ class OrderAdmin(admin.ModelAdmin):
     list_display = [
         "id",
         "get_user_fullname",  # يعرض الاسم الكامل أو اسم العميل الضيف
-        "username",  # حقل اسم العميل الضيف
-        "user",  # رابط المستخدم المسجل
         "customer_phone",
         "city",
         "total_amount",
