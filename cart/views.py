@@ -193,6 +193,7 @@ def initiate_payment(request):
         "apartment_number": request.data.get("apartment_number"),
         "landmark": request.data.get("landmark"),
         "name": request.data.get("name"),
+        "method": request.data.get("method"),
     }
 
     # 💥💥 خطوة الأمان: التحقق الإجباري من الهاتف 💥💥
@@ -300,7 +301,11 @@ def opay_webhook(request):
         apartment_number=checkout_address.get("apartment_number"),
         landmark=checkout_address.get("landmark"),
         total_amount=0,
-        payment_status=PaymentStatus.PAID,
+        payment_status=(
+            PaymentStatus.PAID
+            if (checkout_address.get("method") == "visa")
+            else PaymentStatus.SHIPPING_PAID
+        ),
     )
 
     total_amount = Decimal("0.0")
