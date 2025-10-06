@@ -4,6 +4,7 @@ from rest_framework.response import Response
 from rest_framework.pagination import PageNumberPagination
 from django.db.models import F, ExpressionWrapper, FloatField, Count
 from django.db.models.functions import Cast
+from rest_framework import status
 
 from .models import Product, Category
 from .serializers import ProductSerializer
@@ -174,3 +175,16 @@ def get_brands_by_filter(request):
     )
     top_brands = [item["brand"] for item in brand_counts[:10]]
     return Response(top_brands)
+
+
+from .models import OfferImage
+from .serializers import OfferImageSerializer
+
+@api_view(["GET"])
+def get_offer_images(request):
+    queryset = OfferImage.objects.all().order_by("id")
+
+    serializer = OfferImageSerializer(queryset, many=True, context={"request": request})
+
+    # 4. إرجاع البيانات في الـ Response
+    return Response(serializer.data, status=status.HTTP_200_OK)
