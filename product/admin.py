@@ -4,8 +4,8 @@ from django.forms.models import BaseInlineFormSet
 from django.utils.safestring import mark_safe
 from django.core.exceptions import ValidationError
 from django.utils.translation import activate
-
-from .models import Product, ProductImage, Category, ProductVariant
+from .models import Product, ProductImage, Category, ProductVariant,OfferImage
+from django.utils.html import format_html
 
 
 # --- Inline for product images ---
@@ -107,3 +107,26 @@ class MyAdminSite(admin.AdminSite):
 
 
 admin_site = MyAdminSite(name="myadmin")
+
+
+@admin.register(OfferImage)
+class OfferImageAdmin(admin.ModelAdmin):
+    # ✅ الحقول التي تظهر في قائمة العروض (ID والصورة المصغرة فقط)
+    list_display = ("id", "display_image_thumbnail")
+
+    # ❌ لا يوجد list_editable
+
+    # ✅ الحقول التي تظهر في صفحة إضافة/تعديل العرض (حقل الصورة فقط)
+    fields = ("image",)
+
+    # ✅ دالة لعرض الصورة المصغرة في قائمة العروض
+    def display_image_thumbnail(self, obj):
+        if obj.image:
+            # عرض الصورة بحجم صغير (50x50 بكسل)
+            return format_html(
+                '<img src="{}" style="width: 50px; height: 50px; object-fit: cover; border-radius: 4px;" />',
+                obj.image.url,
+            )
+        return "—"
+
+    display_image_thumbnail.short_description = "صورة العرض"
