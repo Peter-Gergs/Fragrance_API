@@ -118,7 +118,9 @@ def initiate_payment(request):
     )
 
     shipping_setting = (
-        ShippingSetting.objects.get(governorate=request.data.get("governorate"))
+        ShippingSetting.objects.filter(
+            governorate=request.data.get("governorate")
+        ).first()
         or ShippingSetting.objects.first()
     )
     shipping_cost = shipping_setting.cost if shipping_setting else 0
