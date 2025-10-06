@@ -2,11 +2,10 @@ from django.contrib import admin
 from .models import Order, OrderItem, ShippingSetting, PendingOrder
 
 
-# ✅ OrderItem Inline للعرض في صفحة الطلب
+# ✅ OrderItem Inline
 class OrderItemInline(admin.TabularInline):
     model = OrderItem
     extra = 0
-    # نعتمد على دالة display_variant لعرض المنتج والـ Variant
     readonly_fields = ["display_variant", "quantity", "price"]
     fields = ["display_variant", "quantity", "price"]
 
@@ -14,19 +13,16 @@ class OrderItemInline(admin.TabularInline):
         product_name = None
         details = ""
 
-        # جرب تجيب اسم المنتج من العلاقة أو من الحقل name
         if obj.product:
             product_name = obj.product.name
         elif obj.name:
             product_name = obj.name
 
-        # جرب تجيب تفاصيل الـ variant (الحجم مثلًا)
         if obj.variant:
             size = getattr(obj.variant, "size_ml", None)
             if size:
                 details = f"{size} ml"
 
-        # fallback في حالة مفيش أي بيانات
         if not product_name:
             return "—"
 
@@ -35,13 +31,14 @@ class OrderItemInline(admin.TabularInline):
     display_variant.short_description = "Product/Variant (ml)"
 
 
-# ✅ تحسين شكل عرض الطلبات في لوحة الأدمن
+# ✅ تحسين عرض الطلبات
 class OrderAdmin(admin.ModelAdmin):
     list_display = [
         "id",
-        "get_user_fullname",  # يعرض الاسم الكامل أو اسم العميل الضيف
+        "get_user_fullname",
         "customer_phone",
         "city",
+        "get_shipping_cost",  # 👈 أضفنا عمود تكلفة الشحن
         "total_amount",
         "payment_status",
         "order_status",
@@ -52,9 +49,14 @@ class OrderAdmin(admin.ModelAdmin):
         "order_status",
         "city",
     ]
-    # ... (بقية الحقول)
+    search_fields = [
+        "user__username",
+        "customer_phone",
+        "city",
+        "username",
+    ]
+    inlines = [OrderItemInline]
 
-    # ✅ دالة مخصصة لعرض اسم العميل (مسجل أو ضيف)
     def get_user_fullname(self, obj):
         if obj.user and obj.user.first_name:
             return f"{obj.user.first_name} {obj.user.last_name}"
@@ -63,13 +65,16 @@ class OrderAdmin(admin.ModelAdmin):
         return "Guest"
 
     get_user_fullname.short_description = "Customer Name"
-    search_fields = [
-        "user__username",
-        "customer_phone",
-        "city",
-        "username",
-    ]  # ✅ إضافة username للبحث
-    inlines = [OrderItemInline]
+
+    # ✅ دالة جديدة لحساب تكلفة الشحن من الـ ShippingSetting
+    def get_shipping_cost(self, obj):
+        try:
+            shipping = ShippingSetting.objects.get(governorate=obj.governorate)
+            return f"{shipping.cost} EGP"
+        except ShippingSetting.DoesNotExist:
+            return "—"
+
+    get_shipping_cost.short_description = "Shipping Cost"
 
     def get_readonly_fields(self, request, obj=None):
         if obj:
@@ -84,6 +89,4 @@ class ShippingSettingAdmin(admin.ModelAdmin):
     list_editable = ("cost",)
 
 
-# ✅ التسجيل في الأدمن
 admin.site.register(Order, OrderAdmin)
-admin.site.register(PendingOrder)
