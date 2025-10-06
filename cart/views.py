@@ -112,14 +112,14 @@ def initiate_payment(request):
     if not cart_items.exists():
         return Response({"error": "Cart is empty."}, status=400)
 
-    # 1. احسب الإجمالي (الكود كما هو)
     subtotal = sum(
         (item.variant.price - (item.variant.discount or 0)) * item.quantity
         for item in cart_items
     )
 
-    shipping_setting = ShippingSetting.objects.get(
-        governorate=request.data.get("governorate")
+    shipping_setting = (
+        ShippingSetting.objects.get(governorate=request.data.get("governorate"))
+        or ShippingSetting.objects.first()
     )
     shipping_cost = shipping_setting.cost if shipping_setting else 0
     total_amount = subtotal + shipping_cost
