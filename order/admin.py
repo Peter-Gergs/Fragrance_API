@@ -26,7 +26,7 @@ class OrderItemInline(admin.TabularInline):
         if image_url:
             # عرض الصورة بحجم صغير ومناسب
             return format_html(
-                '<img src="{}" style="width: 50px; height: 50px; object-fit: cover;" />',
+                '<img src="{}" style="width: 75px; height: 80px; object-fit: cover;" />',
                 image_url,
             )
         return format_html("—")
