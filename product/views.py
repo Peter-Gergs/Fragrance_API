@@ -137,6 +137,7 @@ def get_all_categories(request):
                 "id": cat.id,
                 "name": cat.name,
                 "slug": cat.slug,
+                "short_description": cat.short_description,
                 "is_special": cat.is_special,
                 "special_title": cat.special_title,
                 "special_description": cat.special_description,
