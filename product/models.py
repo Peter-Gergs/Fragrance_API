@@ -82,8 +82,7 @@ class OfferImage(models.Model):
     )
 
     class Meta:
-        verbose_name = "صورة عرض بسيطة"
-        verbose_name_plural = "صور العروض البسيطة"
+        verbose_name_plural = "Offer Images"
         ordering = ["id"]
 
     def __str__(self):
