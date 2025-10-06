@@ -124,7 +124,7 @@ class OfferImageAdmin(admin.ModelAdmin):
         if obj.image:
             # عرض الصورة بحجم صغير (50x50 بكسل)
             return format_html(
-                '<img src="{}" style="width: 50px; height: 50px; object-fit: cover; border-radius: 4px;" />',
+                '<img src="{}" style="width: 100px; height: 100px; object-fit: cover; border-radius: 4px;" />',
                 obj.image.url,
             )
         return "—"
