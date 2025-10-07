@@ -128,8 +128,32 @@ def flash_sale_swiper(request):
 
 
 @api_view(["GET"])
-def get_all_categories(request):
-    categories = Category.objects.all()
+def get_normal_categories(request):
+    categories = Category.objects.filter(is_special=False)
+    data = []
+
+    for cat in categories:
+        data.append(
+            {
+                "id": cat.id,
+                "name": cat.name,
+                "slug": cat.slug,
+                "short_description": cat.short_description,
+                "is_special": cat.is_special,
+                "special_title": cat.special_title,
+                "special_description": cat.special_description,
+                "image": (
+                    request.build_absolute_uri(cat.image.url) if cat.image else None
+                ),
+            }
+        )
+
+    return Response(data)
+
+
+@api_view(["GET"])
+def get_special_categories(request):
+    categories = Category.objects.filter(is_special=True)
     data = []
 
     for cat in categories:
@@ -179,6 +203,7 @@ def get_brands_by_filter(request):
 
 from .models import OfferImage
 from .serializers import OfferImageSerializer
+
 
 @api_view(["GET"])
 def get_offer_images(request):
