@@ -230,20 +230,21 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 SESSION_COOKIE_NAME = "sessionid"
 SESSION_ENGINE = "django.contrib.sessions.backends.db"
 
-SESSION_COOKIE_SAMESITE = None  # ملاحظة: None بدون كوتيشن في Django 5.2+
-SESSION_COOKIE_SECURE = False
+# ✅ لأن الموقع بيشتغل على HTTPS
+SESSION_COOKIE_SECURE = True
+CSRF_COOKIE_SECURE = True
 
+# ✅ لازم None (علشان يسمح بالـ cross-subdomain cookies)
+SESSION_COOKIE_SAMESITE = None
 CSRF_COOKIE_SAMESITE = None
-CSRF_COOKIE_SECURE = False
 
+# ✅ خليك متأكد إنك بتسمح للفرونت إند بالتعامل مع السيرفر
 CORS_ALLOW_CREDENTIALS = True
 CORS_ALLOWED_ORIGINS = [
-    "http://localhost:5173",
     "https://3sfragrance.com",
     "https://www.3sfragrance.com",
 ]
 CSRF_TRUSTED_ORIGINS = [
-    "http://localhost:5173",
     "https://3sfragrance.com",
     "https://www.3sfragrance.com",
 ]
