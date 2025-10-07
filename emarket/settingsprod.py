@@ -34,10 +34,10 @@ ALLOWED_HOSTS = ["52.232.22.140", "127.0.0.1", "api.3sfragrance.com", "localhost
 LANGUAGE_CODE = "en"
 USE_I18N = True
 
-OPAY_MERCHANT_ID = "281825080619553"
-OPAY_PUBLIC_KEY = "OPAYPUB17544756341740.2485347026738518"
-OPAY_SECRET_KEY = "OPAYPRV17544756341740.13079928036916444"
-OPAY_ENV = "sandbox"
+OPAY_MERCHANT_ID = "281825082914353"
+OPAY_PUBLIC_KEY = "OPAYPUB17564744895120.9517191837351693"
+OPAY_SECRET_KEY = "OPAYPRV17564744895120.37102856115071037"
+OPAY_ENV = "production"
 
 FRONTEND_URL = "https://www.3sfragrance.com"
 BACKEND_URL = "https://api.3sfragrance.com"
@@ -230,20 +230,21 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 SESSION_COOKIE_NAME = "sessionid"
 SESSION_ENGINE = "django.contrib.sessions.backends.db"
 
-SESSION_COOKIE_SAMESITE = None  # ملاحظة: None بدون كوتيشن في Django 5.2+
-SESSION_COOKIE_SECURE = False
+# ✅ لأن الموقع بيشتغل على HTTPS
+SESSION_COOKIE_SECURE = True
+CSRF_COOKIE_SECURE = True
 
+# ✅ لازم None (علشان يسمح بالـ cross-subdomain cookies)
+SESSION_COOKIE_SAMESITE = None
 CSRF_COOKIE_SAMESITE = None
-CSRF_COOKIE_SECURE = False
 
+# ✅ خليك متأكد إنك بتسمح للفرونت إند بالتعامل مع السيرفر
 CORS_ALLOW_CREDENTIALS = True
 CORS_ALLOWED_ORIGINS = [
-    "http://localhost:5173",
     "https://3sfragrance.com",
     "https://www.3sfragrance.com",
 ]
 CSRF_TRUSTED_ORIGINS = [
-    "http://localhost:5173",
     "https://3sfragrance.com",
     "https://www.3sfragrance.com",
 ]
