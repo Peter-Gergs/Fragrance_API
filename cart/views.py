@@ -106,9 +106,9 @@ def delete_cart_item(request, item_id):
 @api_view(["POST"])
 def buy_now(request):
     """
-    BuyNow: clear the user's cart and add a single product for immediate checkout.
+    BuyNow: clear current cart (user or guest), add a product, prepare for checkout.
     """
-    print("🛒 PayNow (prep checkout) called:", request.data, file=sys.stderr)
+    print("🛒 BuyNow called:", request.data, file=sys.stderr)
 
     variant_id = request.data.get("variant_id")
     quantity = int(request.data.get("quantity", 1))
@@ -116,10 +116,13 @@ def buy_now(request):
     if not variant_id:
         return Response({"error": "variant_id is required."}, status=400)
 
-    cart, _ = Cart.objects.get_or_create(user=request.user)
+    # 🟢 استخدم نفس الفانكشن الذكية اللي عندك
+    cart = get_or_create_cart(request)
 
+    # 🧹 نحذف محتويات الكارت القديمة
     cart.items.all().delete()
 
+    # 🛍 نضيف المنتج الجديد
     variant = get_object_or_404(ProductVariant, id=variant_id)
 
     if quantity > variant.stock:
@@ -130,11 +133,14 @@ def buy_now(request):
 
     CartItem.objects.create(cart=cart, variant=variant, quantity=quantity)
 
+    # ✅ نرجع استجابة بسيطة — المستخدم هيتحول بعدها لصفحة Checkout
     return Response(
         {
-            "message": "Product added to cart successfully for checkout.",
+            "message": "Product added successfully for checkout.",
             "variant": variant.id,
             "quantity": quantity,
+            "cart_id": cart.id,
+            "is_guest": not request.user.is_authenticated,
         },
         status=status.HTTP_200_OK,
     )
