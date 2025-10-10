@@ -104,6 +104,43 @@ def delete_cart_item(request, item_id):
 
 
 @api_view(["POST"])
+def buy_now(request):
+    """
+    BuyNow: clear the user's cart and add a single product for immediate checkout.
+    """
+    print("🛒 PayNow (prep checkout) called:", request.data, file=sys.stderr)
+
+    variant_id = request.data.get("variant_id")
+    quantity = int(request.data.get("quantity", 1))
+
+    if not variant_id:
+        return Response({"error": "variant_id is required."}, status=400)
+
+    cart, _ = Cart.objects.get_or_create(user=request.user)
+
+    cart.items.all().delete()
+
+    variant = get_object_or_404(ProductVariant, id=variant_id)
+
+    if quantity > variant.stock:
+        return Response(
+            {"error": "Requested quantity exceeds available stock."},
+            status=status.HTTP_400_BAD_REQUEST,
+        )
+
+    CartItem.objects.create(cart=cart, variant=variant, quantity=quantity)
+
+    return Response(
+        {
+            "message": "Product added to cart successfully for checkout.",
+            "variant": variant.id,
+            "quantity": quantity,
+        },
+        status=status.HTTP_200_OK,
+    )
+
+
+@api_view(["POST"])
 def initiate_payment(request):
     print("🔔 Data received from Checkout Form:", request.data, file=sys.stderr)
     cart = get_or_create_cart(request)

@@ -15,11 +15,10 @@ urlpatterns = [
         views.update_cart_item_quantity,
         name="update_cart_quantity",
     ),
+    path("cart/buy_now/", views.initiate_payment, name="initiate_payment"),
     # Pending Order Flow
     # Payment Flow
     path("payment/pay/", views.initiate_payment, name="initiate_payment"),
     path("payment/webhook/", csrf_exempt(views.opay_webhook), name="payment_webhook"),
     path("payment/callback/", csrf_exempt(views.opay_webhook), name="payment_callback"),
 ]
-
-
