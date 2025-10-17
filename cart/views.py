@@ -194,11 +194,20 @@ def initiate_payment(request):
     # 3. المنتجات
     product_list = []
     for item in cart_items:
+        product_name = item.variant.product.name
+        product_desc = item.variant.product.description or "No description"
+
+        # ✂️ تقصير النصوص لتجنب رفض OPay
+        if len(product_name) > 75:
+            product_name = product_name[:70] + "..."
+        if len(product_desc) > 190:
+            product_desc = product_desc[:157] + "..."
+
         product_list.append(
             {
                 "productId": item.id,
-                "name": item.variant.product.name,
-                "description": item.variant.product.description or "No description",
+                "name": product_name,
+                "description": product_desc,
                 "quantity": item.quantity,
                 "price": str(int(item.variant.price * 100)),
             }
