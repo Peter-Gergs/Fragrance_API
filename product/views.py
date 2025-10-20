@@ -43,6 +43,8 @@ def get_by_id_product(request, slug):
 @api_view(["GET"])
 def search_products_view(request, keyword):
     base_queryset = search_products(keyword)
+    paginator = PageNumberPagination()
+    paginator.page_size = pageSize
 
     # Apply filters by brand, category, min/max price
     brand = request.GET.get("brand")
@@ -59,10 +61,10 @@ def search_products_view(request, keyword):
     if max_price:
         base_queryset = base_queryset.filter(price__lte=max_price)
 
-    serializer = ProductSerializer(
-        base_queryset, many=True, context={"request": request}
-    )
-    return Response({"results": serializer.data})
+    # ✅ هنا التصحيح:
+    result_page = paginator.paginate_queryset(base_queryset, request)
+    serializer = ProductSerializer(result_page, many=True, context={"request": request})
+    return paginator.get_paginated_response(serializer.data)
 
 
 from .models import Product, Category, ProductVariant
