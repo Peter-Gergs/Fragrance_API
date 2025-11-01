@@ -37,7 +37,7 @@ class Product(models.Model):
     addedBy = models.ForeignKey(User, null=True, on_delete=models.SET_NULL)
 
     class Meta:
-        ordering = ["-created_at"]
+        ordering = ["-id"]
 
     def __str__(self):
         return self.name
