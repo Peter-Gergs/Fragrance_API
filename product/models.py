@@ -36,6 +36,9 @@ class Product(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     addedBy = models.ForeignKey(User, null=True, on_delete=models.SET_NULL)
 
+    class Meta:
+        ordering = ["-created_at"]
+
     def __str__(self):
         return self.name
 
