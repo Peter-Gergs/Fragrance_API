@@ -192,26 +192,17 @@ def initiate_payment(request):
         }
 
     # 3. المنتجات
-    product_list = []
-    for item in cart_items:
-        product_name = item.variant.product.name
-        product_desc = item.variant.product.description or "No description"
+    total_quantity = sum(item.quantity for item in cart_items)
 
-        # ✂️ تقصير النصوص لتجنب رفض OPay
-        if len(product_name) > 75:
-            product_name = product_name[:70] + "..."
-        if len(product_desc) > 190:
-            product_desc = product_desc[:157] + "..."
-
-        product_list.append(
-            {
-                "productId": item.id,
-                "name": product_name,
-                "description": product_desc,
-                "quantity": item.quantity,
-                "price": str(int(item.variant.price * 100)),
-            }
-        )
+    product_list = [
+        {
+            "productId": "cart_summary",
+            "name": f"Order Summary ({total_quantity} items)",
+            "description": "Multiple product variants from your cart",
+            "quantity": 1,
+            "price": str(int(subtotal * 100)),  # نحول للمليمات (piasters)
+        }
+    ]
 
     result = create_cashier_payment(
         amount=amount,
