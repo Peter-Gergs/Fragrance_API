@@ -8,7 +8,7 @@ class PaymentTransaction(models.Model):
     """
 
     # مرجع OPay الفريد اللي بيستخدم للـ Webhook
-    opay_reference = models.CharField(max_length=100, unique=True, db_index=True)
+    opay_reference = models.CharField(max_length=255, unique=True, db_index=True)
 
     # ربطها بالكارت اللي تم الدفع عشانه
     cart = models.ForeignKey(Cart, on_delete=models.SET_NULL, null=True, blank=True)
@@ -17,7 +17,7 @@ class PaymentTransaction(models.Model):
     checkout_address_json = models.JSONField(default=dict)
 
     # حالة العملية
-    status = models.CharField(max_length=20, default="PENDING")
+    status = models.CharField(max_length=100, default="PENDING")
 
     # وقت الإنشاء
     created_at = models.DateTimeField(auto_now_add=True)
