@@ -24,14 +24,6 @@ import json  # تم الإضافة
 import logging
 
 
-def arabic_to_english_number(arabic_num):
-    if not arabic_num:
-        return "0"
-    arabic_digits = "٠١٢٣٤٥٦٧٨٩"
-    english_digits = "0123456789"
-    translation_table = str.maketrans(arabic_digits, english_digits)
-    return arabic_num.translate(translation_table)
-
 
 def get_or_create_cart(request):
     """ترجع الكارت سواء لليوزر أو للضيف"""
@@ -340,16 +332,7 @@ def opay_webhook(request):
 
     user = cart.user  # لو كان المستخدم مسجل دخوله
 
-    # 3. إنشاء الأوردر
-    building_number = int(
-        arabic_to_english_number(checkout_address.get("building_number", "0"))
-    )
-    floor_number = int(
-        arabic_to_english_number(checkout_address.get("floor_number", "0"))
-    )
-    apartment_number = int(
-        arabic_to_english_number(checkout_address.get("apartment_number", "0"))
-    )
+
 
     # إنشاء الأوردر
     order = Order.objects.create(
@@ -359,9 +342,9 @@ def opay_webhook(request):
         governorate=checkout_address.get("governorate"),
         city=checkout_address.get("city"),
         street=checkout_address.get("street"),
-        building_number=building_number,
-        floor_number=floor_number,
-        apartment_number=apartment_number,
+        building_number=checkout_address.get("building_number"),
+        floor_number=checkout_address.get("floor_number"),
+        apartment_number=checkout_address.get("apartment_number"),
         landmark=checkout_address.get("landmark"),
         total_amount=Decimal("0.0"),
         payment_status=(
