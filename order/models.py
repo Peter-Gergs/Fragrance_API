@@ -24,7 +24,7 @@ class Order(models.Model):
     user = models.ForeignKey(
         User, null=True, on_delete=models.SET_NULL, related_name="orders"
     )
-    customer_phone = models.CharField(max_length=20)
+    customer_phone = models.CharField(max_length=100)
 
     # Address
     governorate = models.CharField(max_length=50)
