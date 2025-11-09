@@ -28,12 +28,12 @@ class Order(models.Model):
 
     # Address
     governorate = models.CharField(max_length=50)
-    city = models.CharField(max_length=100)
-    street = models.CharField(max_length=100)
-    building_number = models.CharField(max_length=100, blank=True, null=True)
-    floor_number = models.CharField(max_length=100, blank=True, null=True)
-    apartment_number = models.CharField(max_length=100, blank=True, null=True)
-    landmark = models.CharField(max_length=100, blank=True, null=True)
+    city = models.CharField(max_length=255)
+    street = models.CharField(max_length=255)
+    building_number = models.CharField(max_length=255, blank=True, null=True)
+    floor_number = models.CharField(max_length=255, blank=True, null=True)
+    apartment_number = models.CharField(max_length=255, blank=True, null=True)
+    landmark = models.CharField(max_length=255, blank=True, null=True)
 
     # order details
     total_amount = models.IntegerField(default=0)
