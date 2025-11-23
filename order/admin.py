@@ -66,27 +66,37 @@ class OrderAdmin(admin.ModelAdmin):
         "customer_phone",
         "city",
         "get_shipping_cost",
-        "calculate_final_total",  # ✅ الإجمالي الكلي الجديد (شامل الشحن)
+        "calculate_final_total",
         "payment_status",
         "order_status",
         "created_at",
     ]
-    list_filter = [
-        "payment_status",
-        "order_status",
-        "city",
-    ]
-    search_fields = [
-        "user__username",
-        "customer_phone",
-        "city",
-        "username",
-    ]
+    list_filter = ["payment_status", "order_status", "city"]
+    search_fields = ["user__username", "customer_phone", "city", "username"]
     inlines = [OrderItemInline]
-
-    # ✅ الحقول المستثناة من القراءة فقط عند التعديل
     exclude_from_readonly = ["order_status"]
 
+    fields = (
+        "payment_status",
+        "order_status",
+        "get_user_fullname",  # Customer Name
+        "customer_phone",
+        "governorate",
+        "calculate_final_total",  # Total Final
+        "get_shipping_cost",  # Shipping Cost
+        "total_amount",
+        "city",
+        "street",
+        "building_number",
+        "floor_number",
+        "apartment_number",
+        "username",
+        "created_at",
+        "landmark",
+        "user",
+    )
+
+    # الدوال اللي انت عاملها موجودة زي ما هي
     def get_user_fullname(self, obj):
         if obj.user and obj.user.first_name:
             return f"{obj.user.first_name} {obj.user.last_name}"
@@ -96,7 +106,6 @@ class OrderAdmin(admin.ModelAdmin):
 
     get_user_fullname.short_description = "Customer Name"
 
-    # دالة لحساب تكلفة الشحن (EGP)
     def get_actual_shipping_cost(self, obj):
         try:
             shipping = ShippingSetting.objects.get(governorate=obj.governorate)
@@ -104,7 +113,6 @@ class OrderAdmin(admin.ModelAdmin):
         except ShippingSetting.DoesNotExist:
             return 0.0
 
-    # دالة لعرض تكلفة الشحن في قائمة OrderAdmin
     def get_shipping_cost(self, obj):
         cost = self.get_actual_shipping_cost(obj)
         if cost > 0:
@@ -113,7 +121,6 @@ class OrderAdmin(admin.ModelAdmin):
 
     get_shipping_cost.short_description = "Shipping Cost"
 
-    # ✅ دالة حساب الإجمالي الكلي (المنتجات + الشحن)
     def calculate_final_total(self, obj):
         shipping_cost = self.get_actual_shipping_cost(obj)
         final_total = obj.total_amount + shipping_cost
@@ -122,32 +129,24 @@ class OrderAdmin(admin.ModelAdmin):
     calculate_final_total.short_description = "Total Final (Incl. Ship.)"
     calculate_final_total.admin_order_field = "total_amount"
 
-    # ✅ الدالة التي تجعل كل شيء للقراءة فقط باستثناء 'order_status'
     def get_readonly_fields(self, request, obj=None):
         if obj:
-            # 1. نحصل على جميع الحقول والعلاقات للموديل (تجنباً لخطأ ReverseRelation)
             all_fields = [
                 f.name
                 for f in self.model._meta.get_fields()
                 if not f.auto_created or f.one_to_one
             ]
-
-            # 2. الحقول التي يجب أن تكون للقراءة فقط (كل الحقول باستثناء 'id' و 'order_status')
             readonly = [
                 f
                 for f in all_fields
                 if f not in self.exclude_from_readonly and f != "id"
             ]
-
-            # 3. نضمن أن الحقول المحسوبة (الـ methods) للقراءة فقط مُضمنة أيضاً
             computed_readonly = [
                 "get_user_fullname",
                 "get_shipping_cost",
                 "calculate_final_total",
             ]
-
             return tuple(set(readonly) | set(computed_readonly))
-
         return self.readonly_fields
 
 
