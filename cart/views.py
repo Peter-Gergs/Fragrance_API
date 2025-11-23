@@ -24,7 +24,6 @@ import json  # تم الإضافة
 import logging
 
 
-
 def get_or_create_cart(request):
     """ترجع الكارت سواء لليوزر أو للضيف"""
     if request.user.is_authenticated:
@@ -332,8 +331,6 @@ def opay_webhook(request):
 
     user = cart.user  # لو كان المستخدم مسجل دخوله
 
-
-
     # إنشاء الأوردر
     order = Order.objects.create(
         user=user,
@@ -352,6 +349,7 @@ def opay_webhook(request):
             if checkout_address.get("method") == "cash"
             else PaymentStatus.PAID
         ),
+        opay_reference=reference,
     )
 
     total_amount = Decimal("0.0")
@@ -390,3 +388,30 @@ def opay_webhook(request):
     )
 
     return Response({"status": "Order created successfully", "order_id": order.id})
+
+
+@api_view(["GET"])
+def get_order_by_reference(request):
+    reference = request.query_params.get("reference")
+
+    if not reference:
+        return Response({"error": "Reference is required"}, status=400)
+
+    # 1. لو لسه الأوردر متعملش — transaction لسه موجود
+    try:
+        transaction = PaymentTransaction.objects.get(opay_reference=reference)
+        return Response({"status": transaction.status, "order_id": None})
+    except PaymentTransaction.DoesNotExist:
+        pass
+
+    # 2. لو الأوردر اتعمل
+    order = Order.objects.filter(opay_reference=reference).first()
+    if order:
+        return Response(
+            {
+                "status": "SUCCESS",
+                "order_id": order.id,
+            }
+        )
+
+    return Response({"error": "Reference not found"}, status=404)

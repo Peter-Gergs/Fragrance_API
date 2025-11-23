@@ -21,4 +21,9 @@ urlpatterns = [
     path("payment/pay/", views.initiate_payment, name="initiate_payment"),
     path("payment/webhook/", csrf_exempt(views.opay_webhook), name="payment_webhook"),
     path("payment/callback/", csrf_exempt(views.opay_webhook), name="payment_callback"),
+    path(
+        "payment/get-order/",
+        views.get_order_by_reference,
+        name="get_order_by_reference",
+    ),
 ]

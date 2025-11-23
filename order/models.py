@@ -34,7 +34,7 @@ class Order(models.Model):
     floor_number = models.CharField(max_length=255, blank=True, null=True)
     apartment_number = models.CharField(max_length=255, blank=True, null=True)
     landmark = models.CharField(max_length=255, blank=True, null=True)
-
+    opay_reference = models.CharField(max_length=150, null=True, blank=True)
     # order details
     total_amount = models.IntegerField(default=0)
     payment_status = models.CharField(
