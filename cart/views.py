@@ -168,9 +168,7 @@ def initiate_payment(request):
     )
     shipping_cost = shipping_setting.cost if shipping_setting else 65
     total_amount = (
-        (shipping_cost)
-        if (request.data.get("method") == "cash")
-        else (subtotal + shipping_cost)
+        (100) if (request.data.get("method") == "cash") else (subtotal + shipping_cost)
     )
     amount = int(total_amount * 100)
 
