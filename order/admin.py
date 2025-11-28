@@ -67,6 +67,7 @@ class OrderAdmin(admin.ModelAdmin):
         "city",
         "get_shipping_cost",
         "calculate_final_total",
+        "remaining_amount",  # <-- الحقل الجديد
         "payment_status",
         "order_status",
         "created_at",
@@ -79,11 +80,12 @@ class OrderAdmin(admin.ModelAdmin):
     fields = (
         "payment_status",
         "order_status",
-        "get_user_fullname",  # Customer Name
+        "get_user_fullname",
         "customer_phone",
         "governorate",
-        "calculate_final_total",  # Total Final
-        "get_shipping_cost",  # Shipping Cost
+        "calculate_final_total",
+        "remaining_amount",  # <-- الحقل الجديد
+        "get_shipping_cost",
         "total_amount",
         "city",
         "street",
@@ -96,7 +98,7 @@ class OrderAdmin(admin.ModelAdmin):
         "user",
     )
 
-    # الدوال اللي انت عاملها موجودة زي ما هي
+    # دوال موجودة
     def get_user_fullname(self, obj):
         if obj.user and obj.user.first_name:
             return f"{obj.user.first_name} {obj.user.last_name}"
@@ -129,6 +131,15 @@ class OrderAdmin(admin.ModelAdmin):
     calculate_final_total.short_description = "Total Final (Incl. Ship.)"
     calculate_final_total.admin_order_field = "total_amount"
 
+    # الحقل الجديد
+    def remaining_amount(self, obj):
+        if obj.payment_status.lower() == "cash":
+            remaining = obj.total_amount - 100
+            return f"{remaining:.2f} EGP"
+        return "—"
+
+    remaining_amount.short_description = "Remaining Amount"
+
     def get_readonly_fields(self, request, obj=None):
         if obj:
             all_fields = [
@@ -145,6 +156,7 @@ class OrderAdmin(admin.ModelAdmin):
                 "get_user_fullname",
                 "get_shipping_cost",
                 "calculate_final_total",
+                "remaining_amount",  # <-- خليها readonly
             ]
             return tuple(set(readonly) | set(computed_readonly))
         return self.readonly_fields

@@ -15,7 +15,7 @@ class OrderStatus(models.TextChoices):
 class PaymentStatus(models.TextChoices):
     UNPAID = "Unpaid", "غير مدفوع"
     PAID = "Paid", "مدفوع"
-    SHIPPING_PAID = "Shipping Paid", "تم دفع الشحن فقط"
+    SHIPPING_PAID = "Shipping Paid", "تم تاكيد الحجز"
 
 
 class Order(models.Model):
