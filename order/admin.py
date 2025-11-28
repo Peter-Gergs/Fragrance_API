@@ -3,7 +3,7 @@ from django.utils.html import format_html
 from django.db.models import fields
 
 # استيراد النماذج (Models)
-from .models import Order, OrderItem, ShippingSetting, PendingOrder
+from .models import Order, OrderItem, ShippingSetting, PendingOrder, PaymentStatus
 
 
 # ====================================================================
@@ -133,7 +133,7 @@ class OrderAdmin(admin.ModelAdmin):
 
     # الحقل الجديد
     def remaining_amount(self, obj):
-        if obj.payment_status.lower() == "cash":
+        if obj.payment_status == PaymentStatus.SHIPPING_PAID:
             remaining = obj.total_amount - 100
             return f"{remaining:.2f} EGP"
         return "—"
