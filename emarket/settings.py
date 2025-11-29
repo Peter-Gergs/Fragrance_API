@@ -201,7 +201,7 @@ REST_FRAMEWORK = {
 # https://docs.djangoproject.com/en/5.2/topics/i18n/
 
 
-TIME_ZONE = "Cairo/Africa"
+TIME_ZONE = "Africa/Cairo"
 
 USE_I18N = True
 
