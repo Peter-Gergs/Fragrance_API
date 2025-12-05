@@ -53,6 +53,7 @@ class ProductVariantInline(admin.TabularInline):
 class ProductAdmin(admin.ModelAdmin):
     list_display = ["name", "id", "brand", "get_category"]
     inlines = [ProductImageInline, ProductVariantInline]
+    ordering = ("-id",)  
 
     def get_category(self, obj):
         return obj.category.name if obj.category else "-"
