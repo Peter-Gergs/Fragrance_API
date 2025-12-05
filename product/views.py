@@ -17,7 +17,7 @@ pageSize = 24
 @api_view(["GET"])
 def get_all_products(request):
     products = ProductsFilter(
-        request.GET, queryset=Product.objects.all().order_by("priority", "-id")
+        request.GET, queryset=Product.objects.all().order_by("-priority", "-id")
     )
     paginator = PageNumberPagination()
     paginator.page_size = pageSize
@@ -28,7 +28,7 @@ def get_all_products(request):
 
 @api_view(["GET"])
 def get_swiper_products(request):
-    products = Product.objects.all().order_by("priority", "-id")[:10]
+    products = Product.objects.all().order_by("-priority", "-id")[:10]
     serializer = ProductSerializer(products, many=True, context={"request": request})
     return Response(serializer.data)
 
