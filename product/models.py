@@ -35,9 +35,10 @@ class Product(models.Model):
     brand = models.CharField(max_length=50, blank=False)
     created_at = models.DateTimeField(auto_now_add=True)
     addedBy = models.ForeignKey(User, null=True, on_delete=models.SET_NULL)
+    priority = models.PositiveIntegerField(default=1)  # خانة الأولوية
 
     class Meta:
-        ordering = ["-id"]
+        ordering = ["priority", "-id"]  # ترتيب حسب الأولوية، وبعدين حسب الأحدث
 
     def __str__(self):
         return self.name
