@@ -7,19 +7,13 @@ def search_products(query):
 
     return (
         Product.objects.annotate(
-            priority=Case(
-                When(
-                    Q(name__icontains=query),
-                    then=Value(1),
-                ),
-                When(
-                    Q(description__icontains=query),
-                    then=Value(2),
-                ),
+            search_priority=Case(
+                When(Q(name__icontains=query), then=Value(1)),
+                When(Q(description__icontains=query), then=Value(2)),
                 default=Value(3),
                 output_field=IntegerField(),
             )
         )
         .filter(Q(name__icontains=query) | Q(description__icontains=query))
-        .order_by("priority")
+        .order_by("search_priority")
     )

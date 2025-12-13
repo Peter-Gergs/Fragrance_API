@@ -178,12 +178,6 @@ AUTH_PASSWORD_VALIDATORS = [
 ]
 
 
-CORS_ALLOWED_ORIGINS = [
-    "http://localhost:5173",
-    "https://3sfragrance.com",
-    "https://www.3sfragrance.com",
-]
-
 CORS_ALLOW_CREDENTIALS = True
 
 REST_FRAMEWORK = {
@@ -243,6 +237,7 @@ CORS_ALLOW_CREDENTIALS = True
 CORS_ALLOWED_ORIGINS = [
     "https://3sfragrance.com",
     "https://www.3sfragrance.com",
+    "http://localhost:5173",
 ]
 CSRF_TRUSTED_ORIGINS = [
     "https://3sfragrance.com",
