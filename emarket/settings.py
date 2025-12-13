@@ -28,7 +28,7 @@ SECRET_KEY = "django-insecure-0w2(yk75b*$i33cfqb5+0@f3k-605^+&a%sc*w)$=j7c(&$$6q
 
 DEBUG = True
 
-ALLOWED_HOSTS = ["52.232.22.140" ,"127.0.0.1", "api.3sfragrance.com", "localhost"]
+ALLOWED_HOSTS = ["52.232.22.140", "127.0.0.1", "api.3sfragrance.com", "localhost"]
 
 
 LANGUAGE_CODE = "en"
@@ -237,9 +237,12 @@ CORS_ALLOW_CREDENTIALS = True
 CORS_ALLOWED_ORIGINS = [
     "https://3sfragrance.com",
     "https://www.3sfragrance.com",
-    "http://localhost:5173",
+    "http://3sfragrance.com",
+    "http://www.3sfragrance.com",
 ]
 CSRF_TRUSTED_ORIGINS = [
     "https://3sfragrance.com",
     "https://www.3sfragrance.com",
+    "http://3sfragrance.com",
+    "http://www.3sfragrance.com",
 ]
