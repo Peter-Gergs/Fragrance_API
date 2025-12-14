@@ -244,12 +244,12 @@ CORS_ALLOWED_ORIGINS = [
     "https://www.3sfragrance.com",
     "http://3sfragrance.com",
     "http://www.3sfragrance.com",
-    "https://spare.3sfragrance.com",  # ← ضيف الساب دومين
+    "https://api.3sfragrance.com",  # ← ضيف الساب دومين
 ]
 CSRF_TRUSTED_ORIGINS = [
     "https://3sfragrance.com",
     "https://www.3sfragrance.com",
     "http://3sfragrance.com",
     "http://www.3sfragrance.com",
-    "https://spare.3sfragrance.com",  # ← ضيف الساب دومين
+    "https://api.3sfragrance.com",  # ← ضيف الساب دومين
 ]
