@@ -230,8 +230,8 @@ SESSION_COOKIE_NAME = "sessionid"
 SESSION_ENGINE = "django.contrib.sessions.backends.db"
 
 # ✅ لأن الموقع بيشتغل على HTTPS
-SESSION_COOKIE_SECURE = True
-CSRF_COOKIE_SECURE = True
+SESSION_COOKIE_SECURE = False
+CSRF_COOKIE_SECURE = False
 
 # ✅ لازم None (علشان يسمح بالـ cross-subdomain cookies)
 SESSION_COOKIE_SAMESITE = None
@@ -244,10 +244,12 @@ CORS_ALLOWED_ORIGINS = [
     "https://www.3sfragrance.com",
     "http://3sfragrance.com",
     "http://www.3sfragrance.com",
+    "https://spare.3sfragrance.com",  # ← ضيف الساب دومين
 ]
 CSRF_TRUSTED_ORIGINS = [
     "https://3sfragrance.com",
     "https://www.3sfragrance.com",
     "http://3sfragrance.com",
     "http://www.3sfragrance.com",
+    "https://spare.3sfragrance.com",  # ← ضيف الساب دومين
 ]
