@@ -222,8 +222,6 @@ def initiate_payment(request):
         return Response({"error": error_message}, status=status.HTTP_400_BAD_REQUEST)
     # ===============================================
 
-    # 5. خزّن reference وبيانات الشحن في الموديل الجديد
-    # 💥💥 تأكيد ملء بيانات العنوان من الـ request.data 💥💥
     checkout_data = {
         "customer_phone": request.data.get("customer_phone"),
         "governorate": request.data.get("governorate"),
@@ -235,9 +233,9 @@ def initiate_payment(request):
         "landmark": request.data.get("landmark"),
         "name": request.data.get("name"),
         "method": request.data.get("method"),
+        "shipping_cost": str(shipping_cost),
     }
 
-    # 💥💥 خطوة الأمان: التحقق الإجباري من الهاتف 💥💥
     if not checkout_data.get("customer_phone"):
         return Response(
             {"error": "Customer phone is required for checkout."},
@@ -272,24 +270,17 @@ def opay_webhook(request):
     """
     print("🔔 OPay Webhook Received:", request.data, file=sys.stderr)
 
-    # التحقق من الـ Signature (خطوة أمان يجب إضافتها لاحقاً)
-    # sha512 = request.data.get("sha512")
-    # إذا كانت Opay تتطلب التحقق من التوقيع، يجب تطبيقه هنا قبل أي شيء.
-
     # الحصول على payload
     payload = request.data.get("payload", {})
     if not payload:
         print("⚠️ Missing payload in webhook", file=sys.stderr)
         return Response({"error": "Missing payload"}, status=400)
-
     reference = payload.get("reference")
     status = payload.get("status")
-
     if not reference:
         print("⚠️ Missing reference in webhook", file=sys.stderr)
         return Response({"error": "Missing reference"}, status=400)
 
-    # 1. البحث عن الـ PaymentTransaction المرتبط بالـ reference <=== التعديل هنا
     try:
         transaction = PaymentTransaction.objects.get(opay_reference=reference)
     except PaymentTransaction.DoesNotExist:
@@ -299,12 +290,10 @@ def opay_webhook(request):
         )
         return Response({"error": "Payment reference not found."}, status=404)
 
-    # لو تم معالجة الطلب بالفعل، تجاهله
     if transaction.status == "SUCCESS":
         print(f"ℹ️ Transaction already processed: {reference}", file=sys.stderr)
         return Response({"status": "Already processed"})
 
-    # تحديث حالة المعاملة
     transaction.status = status
     transaction.save()
 
@@ -348,11 +337,10 @@ def opay_webhook(request):
             else PaymentStatus.PAID
         ),
         opay_reference=reference,
-    )
 
+    )
     total_amount = Decimal("0.0")
     products_to_update = []
-
     for item in cart.items.select_related("variant").all():
         price = Decimal(item.variant.price) - Decimal(item.variant.discount or 0)
         total_amount += price * item.quantity
@@ -368,7 +356,9 @@ def opay_webhook(request):
         products_to_update.append(item.variant)
 
     # تحديث الإجمالي والمخزون
-    order.total_amount = total_amount
+    shipping_cost = Decimal(checkout_address.get("shipping_cost", "0.0"))
+    order.shipping_cost = shipping_cost
+    order.total_amount = total_amount + shipping_cost
     order.save()
 
     # حذف محتويات الكارت فقط، وليس الكارت نفسه

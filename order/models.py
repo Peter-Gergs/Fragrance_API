@@ -43,6 +43,7 @@ class Order(models.Model):
     order_status = models.CharField(
         max_length=30, choices=OrderStatus.choices, default=OrderStatus.PROCESSING
     )
+    shipping_cost = models.DecimalField(max_digits=6, decimal_places=2, default=0)
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):

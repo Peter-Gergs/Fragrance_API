@@ -4,7 +4,7 @@ from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated, IsAdminUser
 from rest_framework import status
 from payment.utils import create_cashier_payment
-
+from product.models import ProductVariant
 from product.models import Product
 from .serializer import OrderSerializer, OrderItemsSerializer
 from .models import Order, OrderItem, ShippingSetting
@@ -86,36 +86,38 @@ def new_order(request):
     )
 
     for i in order_items:
-        product = Product.objects.get(id=i["product"])
+        variant = ProductVariant.objects.select_related("product").get(id=i["variant"])
+
+        if i["quantity"] > variant.stock:
+            return Response(
+                {
+                    "error": f"Not enough stock for {variant.product.name} ({variant.size_ml}ml)"
+                },
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        # السعر الحقيقي من الـ Variant
+        price = variant.price - (variant.discount or 0)
+
         OrderItem.objects.create(
-            product=product,
             order=order,
-            name=product.name,
+            product=variant.product,
+            variant=variant,
+            name=variant.product.name,
             quantity=i["quantity"],
-            price=i["price"],
+            price=price,
         )
-        product.stock -= i["quantity"]
-        product.save()
 
-    # 2. Initialize Payment with OPay
-    payment_url = create_cashier_payment(
-        order_id=str(order.id),
-        amount=str(int(total_amount * 100)),  # OPay بيستخدم الفلوس بالـ cents
-        currency="EGP",
-        return_url="https://your-frontend.com/payment/callback",  # غيّرها حسب الـ frontend بتاعك
-    )
+        # خصم المخزون
+        variant.stock -= i["quantity"]
+        variant.save()
 
-    if not payment_url:
-        return Response(
-            {"error": "Payment initialization failed"},
-            status=status.HTTP_500_INTERNAL_SERVER_ERROR,
-        )
+
 
     # Final response to frontend
     return Response(
         {
             "message": "Order created. Redirect to OPay to pay.",
-            "payment_url": payment_url,
             "order_id": order.id,
         }
     )
