@@ -61,6 +61,7 @@ class ProductVariant(models.Model):
     )
     withbox = models.BooleanField(default=False)
     travelsize = models.BooleanField(default=False)
+    caption = models.CharField(max_length=100, blank=True)
 
     class Meta:
         ordering = ["size_ml"]

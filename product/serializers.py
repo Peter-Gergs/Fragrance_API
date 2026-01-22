@@ -23,6 +23,7 @@ class ProductVariantSerializer(serializers.ModelSerializer):
             "final_price",
             "discount",
             "stock",
+            "caption",
         ]
 
     def get_final_price(self, obj):
