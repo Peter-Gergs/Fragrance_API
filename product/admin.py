@@ -4,7 +4,7 @@ from django.forms.models import BaseInlineFormSet
 from django.utils.safestring import mark_safe
 from django.core.exceptions import ValidationError
 from django.utils.translation import activate
-from .models import Product, ProductImage, Category, ProductVariant,OfferImage
+from .models import Product, ProductImage, Category, ProductVariant, OfferImage
 from django.utils.html import format_html
 
 
@@ -46,14 +46,22 @@ class ProductImageInline(admin.TabularInline):
 class ProductVariantInline(admin.TabularInline):
     model = ProductVariant
     extra = 1
-    fields = ["size_ml", "withbox", "travelsize", "price", "stock", "discount"]
+    fields = [
+        "size_ml",
+        "caption",
+        "withbox",
+        "travelsize",
+        "price",
+        "stock",
+        "discount",
+    ]
 
 
 # --- Product Admin ---
 class ProductAdmin(admin.ModelAdmin):
     list_display = ["name", "id", "brand", "get_category"]
     inlines = [ProductImageInline, ProductVariantInline]
-    ordering = ("-id",)  
+    ordering = ("-id",)
 
     def get_category(self, obj):
         return obj.category.name if obj.category else "-"
