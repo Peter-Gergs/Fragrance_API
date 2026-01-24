@@ -14,9 +14,8 @@ from .serializer import ShippingSettingSerializer
 
 
 @api_view(["GET"])
-@permission_classes([IsAuthenticated])
 def get_orders(request):
-    orders = Order.objects.filter(user=request.user)
+    orders = Order.objects.all()
     serializer = OrderSerializer(orders, many=True)
     return Response({"order": serializer.data})
 
