@@ -15,7 +15,7 @@ from .serializer import ShippingSettingSerializer
 
 @api_view(["GET"])
 def get_orders(request):
-    orders = Order.objects.all()
+    orders = Order.objects.all().order_by('id')
     serializer = OrderSerializer(orders, many=True)
     return Response({"order": serializer.data})
 
