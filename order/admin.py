@@ -86,7 +86,7 @@ class OrderAdmin(admin.ModelAdmin):
         "calculate_final_total",
         "remaining_amount",  # <-- الحقل الجديد
         "get_shipping_cost",
-        "total_amount",
+        "calculate_amount_without_ship",
         "city",
         "street",
         "building_number",
@@ -124,8 +124,12 @@ class OrderAdmin(admin.ModelAdmin):
     get_shipping_cost.short_description = "Shipping Cost"
 
     def calculate_final_total(self, obj):
+        final_total = obj.total_amount
+        return f"{final_total:.2f} EGP"
+
+    def calculate_amount_without_ship(self, obj):
         shipping_cost = self.get_actual_shipping_cost(obj)
-        final_total = obj.total_amount + shipping_cost
+        final_total = obj.total_amount - shipping_cost
         return f"{final_total:.2f} EGP"
 
     calculate_final_total.short_description = "Total Final (Incl. Ship.)"
@@ -134,8 +138,7 @@ class OrderAdmin(admin.ModelAdmin):
     # الحقل الجديد
     def remaining_amount(self, obj):
         if obj.payment_status == PaymentStatus.SHIPPING_PAID:
-            shipping_cost = self.get_actual_shipping_cost(obj)
-            remaining = obj.total_amount + shipping_cost - 100
+            remaining = obj.total_amount - 100
             return f"{remaining:.2f} EGP"
         return "—"
 
