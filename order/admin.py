@@ -129,8 +129,8 @@ class OrderAdmin(admin.ModelAdmin):
 
     def calculate_amount_without_ship(self, obj):
         shipping_cost = self.get_actual_shipping_cost(obj)
-        final_total = obj.total_amount - shipping_cost
-        return f"{final_total:.2f} EGP"
+        amount = obj.total_amount - shipping_cost
+        return f"{amount:.2f} EGP"
 
     calculate_final_total.short_description = "Total Final (Incl. Ship.)"
     calculate_final_total.admin_order_field = "total_amount"
@@ -160,7 +160,8 @@ class OrderAdmin(admin.ModelAdmin):
                 "get_user_fullname",
                 "get_shipping_cost",
                 "calculate_final_total",
-                "remaining_amount",  # <-- خليها readonly
+                "remaining_amount",
+                "calculate_amount_without_ship",
             ]
             return tuple(set(readonly) | set(computed_readonly))
         return self.readonly_fields
