@@ -132,6 +132,7 @@ class OrderAdmin(admin.ModelAdmin):
         amount = obj.total_amount - shipping_cost
         return f"{amount:.2f} EGP"
 
+    calculate_amount_without_ship.short_description = "Amount Without Shipping"
     calculate_final_total.short_description = "Total Final (Incl. Ship.)"
     calculate_final_total.admin_order_field = "total_amount"
 
