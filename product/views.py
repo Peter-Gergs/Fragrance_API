@@ -6,8 +6,8 @@ from django.db.models import F, ExpressionWrapper, FloatField, Count
 from django.db.models.functions import Cast
 from rest_framework import status
 
-from .models import Product, Category
-from .serializers import ProductSerializer
+from .models import Product, Category, OfferImage, ReviewsImage
+from .serializers import ProductSerializer, OfferImageSerializer, ReviewsImageSerializer
 from .filters import ProductsFilter
 from .utils import search_products
 
@@ -203,15 +203,21 @@ def get_brands_by_filter(request):
     return Response(top_brands)
 
 
-from .models import OfferImage
-from .serializers import OfferImageSerializer
-
-
 @api_view(["GET"])
 def get_offer_images(request):
     queryset = OfferImage.objects.all().order_by("id")
 
     serializer = OfferImageSerializer(queryset, many=True, context={"request": request})
 
-    # 4. إرجاع البيانات في الـ Response
+    return Response(serializer.data, status=status.HTTP_200_OK)
+
+
+@api_view(["GET"])
+def get_review_images(request):
+    queryset = ReviewsImage.objects.all().order_by("id")
+
+    serializer = ReviewsImageSerializer(
+        queryset, many=True, context={"request": request}
+    )
+
     return Response(serializer.data, status=status.HTTP_200_OK)

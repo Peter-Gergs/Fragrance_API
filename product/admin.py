@@ -4,7 +4,14 @@ from django.forms.models import BaseInlineFormSet
 from django.utils.safestring import mark_safe
 from django.core.exceptions import ValidationError
 from django.utils.translation import activate
-from .models import Product, ProductImage, Category, ProductVariant, OfferImage
+from .models import (
+    Product,
+    ProductImage,
+    Category,
+    ProductVariant,
+    OfferImage,
+    ReviewsImage,
+)
 from django.utils.html import format_html
 
 
@@ -139,3 +146,20 @@ class OfferImageAdmin(admin.ModelAdmin):
         return "—"
 
     display_image_thumbnail.short_description = "صورة العرض"
+
+
+@admin.register(ReviewsImage)
+class OfferImageAdmin(admin.ModelAdmin):
+    list_display = ("id", "display_image_thumbnail")
+
+    fields = ("image",)
+
+    def display_image_thumbnail(self, obj):
+        if obj.image:
+            return format_html(
+                '<img src="{}" style="width: 100px; height: 100px; object-fit: cover; border-radius: 4px;" />',
+                obj.image.url,
+            )
+        return "—"
+
+    display_image_thumbnail.short_description = "صورة التقييم"

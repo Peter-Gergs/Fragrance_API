@@ -9,7 +9,10 @@ urlpatterns = [
     path("sales/", views.flash_sale_products, name="sales"),
     path("sales/swiper/", views.flash_sale_swiper, name="sales swiper"),
     path("categories/normal/", views.get_normal_categories, name="get_all_categories"),
-    path("categories/special/", views.get_special_categories, name="get_all_categories"),
+    path(
+        "categories/special/", views.get_special_categories, name="get_all_categories"
+    ),
     path("brands/", views.get_brands_by_filter, name="get_brands_by_filter"),
     path("offers/", views.get_offer_images, name="get_brands_by_filter"),
+    path("reviews/", views.get_review_images, name="get_brands_by_filter"),
 ]

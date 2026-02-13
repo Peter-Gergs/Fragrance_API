@@ -92,3 +92,16 @@ class OfferImage(models.Model):
 
     def __str__(self):
         return f"صورة عرض #{self.id}"
+
+
+class ReviewsImage(models.Model):
+    image = models.ImageField(
+        upload_to="reviews/slider/simple/", verbose_name="صورة التقييم"
+    )
+
+    class Meta:
+        verbose_name_plural = "Reviews Images"
+        ordering = ["id"]
+
+    def __str__(self):
+        return f"صورة عرض #{self.id}"

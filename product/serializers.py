@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Product, ProductImage, ProductVariant, OfferImage
+from .models import Product, ProductImage, ProductVariant, OfferImage, ReviewsImage
 from decimal import Decimal, ROUND_DOWN
 
 
@@ -77,8 +77,12 @@ class ProductSerializer(serializers.ModelSerializer):
 
 
 class OfferImageSerializer(serializers.ModelSerializer):
-    """مسلسل بسيط يعرض رابط الصورة فقط."""
-
     class Meta:
         model = OfferImage
-        fields = ["id", "image"]  # ✅ نحتاج فقط إلى ID ورابط الصورة
+        fields = ["id", "image"]
+
+
+class ReviewsImageSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ReviewsImage
+        fields = ["id", "image"]
