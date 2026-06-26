@@ -45,8 +45,9 @@ class OrderItemInline(admin.TabularInline):
 
         if obj.variant:
             size = getattr(obj.variant, "size_ml", None)
+            caption = getattr(obj.variant, "caption", None)
             if size:
-                details = f"{size} ml"
+                details = f"{size} ml {caption}"
 
         if not product_name:
             return "—"

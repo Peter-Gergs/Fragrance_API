@@ -27,8 +27,8 @@ def get_all_products(request):
 
 
 @api_view(["GET"])
-def get_swiper_products(request):
-    products = Product.objects.all().order_by("-priority", "-id")[:10]
+def get_latest_products(request):
+    products = Product.objects.all().order_by("-id")[:10]
     serializer = ProductSerializer(products, many=True, context={"request": request})
     return Response(serializer.data)
 
