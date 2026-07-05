@@ -156,7 +156,8 @@ def initiate_payment(request):
     if not cart_items.exists():
         return Response({"error": "Cart is empty."}, status=400)
 
-    subtotal = OfferService().calculate(cart)
+    offer_result = OfferService().calculate(cart)
+    subtotal = offer_result["total"]
 
     shipping_setting = (
         ShippingSetting.objects.filter(
