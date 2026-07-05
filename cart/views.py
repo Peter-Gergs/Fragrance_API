@@ -22,6 +22,7 @@ import sys
 from payment.models import PaymentTransaction  # <=== تم الإضافة
 import json  # تم الإضافة
 import logging
+from offers.services import OfferService
 
 
 def get_or_create_cart(request):
@@ -155,10 +156,7 @@ def initiate_payment(request):
     if not cart_items.exists():
         return Response({"error": "Cart is empty."}, status=400)
 
-    subtotal = sum(
-        (item.variant.price - (item.variant.discount or 0)) * item.quantity
-        for item in cart_items
-    )
+    subtotal = OfferService().calculate(cart)
 
     shipping_setting = (
         ShippingSetting.objects.filter(
@@ -337,7 +335,6 @@ def opay_webhook(request):
             else PaymentStatus.PAID
         ),
         opay_reference=reference,
-
     )
     total_amount = Decimal("0.0")
     products_to_update = []

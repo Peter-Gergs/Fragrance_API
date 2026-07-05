@@ -33,11 +33,9 @@ class OrderItemInline(admin.TabularInline):
 
     display_image.short_description = "Image"
 
-    # دالة عرض اسم المنتج والتفاصيل
     def display_variant(self, obj):
         product_name = None
         details = ""
-        # ... (بقية منطق عرض المنتج كما كان)
         if obj.product:
             product_name = obj.product.name
         elif obj.name:

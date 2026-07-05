@@ -60,6 +60,7 @@ INSTALLED_APPS = [
     "rest_framework",
     "product.apps.ProductConfig",
     "account.apps.AccountConfig",
+    "offers.apps.OffersConfig",
     "order.apps.OrderConfig",
     "cart.apps.CartConfig",
     "contact.apps.ContactConfig",

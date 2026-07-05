@@ -37,6 +37,7 @@ class Product(models.Model):
     addedBy = models.ForeignKey(User, null=True, on_delete=models.SET_NULL)
     priority = models.PositiveIntegerField(default=1)  
 
+    allow_offer = models.BooleanField(default=True, verbose_name="يدخل في العروض")
     class Meta:
         ordering = ["priority", "-id"]  
 

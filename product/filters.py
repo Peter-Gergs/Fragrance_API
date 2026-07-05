@@ -29,7 +29,6 @@ class ProductsFilter(django_filters.FilterSet):
         return queryset.filter(lowest_variant_price__gte=value)
 
     def filter_max_price(self, queryset, name, value):
-        # نفس الفكرة: أقل سعر variant في المنتج <= القيمة اللي المستخدم اختارها
         queryset = queryset.annotate(
             lowest_variant_price=Min(
                 ExpressionWrapper(

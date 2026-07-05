@@ -1,8 +1,7 @@
 from rest_framework import serializers
 from .models import Cart, CartItem
 from product.serializers import ProductSerializer, ProductVariantSerializer
-
-
+from offers.services import OfferService
 
 
 class CartItemSerializer(serializers.ModelSerializer):
@@ -20,6 +19,9 @@ class CartItemSerializer(serializers.ModelSerializer):
 class CartSerializer(serializers.ModelSerializer):
     items = CartItemSerializer(many=True, read_only=True)
     subtotal = serializers.SerializerMethodField()
+    discount = serializers.SerializerMethodField()
+    total = serializers.SerializerMethodField()
+    offers = serializers.SerializerMethodField()
 
     class Meta:
         model = Cart
@@ -28,14 +30,20 @@ class CartSerializer(serializers.ModelSerializer):
             "user",
             "created_at",
             "subtotal",
+            "discount",
+            "total",
             "items",
+            "offers",
         ]
-    def get_subtotal(self, obj):
-        total = 0
-        for item in obj.items.all():
-            # final_price من الـ variant مش من الـ product
-            final_price = float(item.variant.price) - float(item.variant.discount or 0)
-            total += final_price * item.quantity
-        return format(total, ".2f")
 
-    
+    def get_subtotal(self, obj):
+        return OfferService().calculate(obj)["subtotal"]
+
+    def get_discount(self, obj):
+        return OfferService().calculate(obj)["discount"]
+
+    def get_total(self, obj):
+        return OfferService().calculate(obj)["total"]
+
+    def get_offers(self, obj):
+        return OfferService().calculate(obj)["offers"]

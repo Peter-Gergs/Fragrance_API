@@ -53,6 +53,7 @@ class ProductSerializer(serializers.ModelSerializer):
             "min_price",
             "max_price",
             "variants",
+            "allow_offer",
             "images",
             "created_at",
         ]
