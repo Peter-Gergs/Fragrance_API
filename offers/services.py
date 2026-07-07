@@ -68,6 +68,10 @@ class OfferService:
                     continue
 
                 count = remaining // offer.required_quantity
+                gift_used = min(
+                    remaining - (count * offer.required_quantity),
+                    count * offer.gift_quantity,
+                )
                 applied_offers.append(
                     {
                         "id": offer.id,
@@ -80,11 +84,13 @@ class OfferService:
                             (Decimal(offer.original_price) - Decimal(offer.offer_price))
                             * count
                         ),
+                        "gift_used": gift_used,
                     }
                 )
                 total += Decimal(offer.offer_price) * count
 
                 remaining -= count * offer.required_quantity
+                remaining -= gift_used
 
             # المنتجات المتبقية تتحاسب عادي
             if remaining > 0:
