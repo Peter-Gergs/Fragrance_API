@@ -86,6 +86,8 @@ class OrderAdmin(admin.ModelAdmin):
         "remaining_amount",  # <-- الحقل الجديد
         "get_shipping_cost",
         "calculate_amount_without_ship",
+        "discount_amount",
+        "display_offers",
         "city",
         "street",
         "building_number",
@@ -165,6 +167,17 @@ class OrderAdmin(admin.ModelAdmin):
             ]
             return tuple(set(readonly) | set(computed_readonly))
         return self.readonly_fields
+
+    def display_offers(self, obj):
+        if not obj.applied_offers:
+            return "—"
+        lines = [
+            f"{o['title']} ×{o['times']} (saved {o['saved']} EGP)"
+            for o in obj.applied_offers
+        ]
+        return format_html("<br>".join(lines))
+
+    display_offers.short_description = "Offers Applied"
 
 
 # ====================================================================

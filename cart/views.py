@@ -316,6 +316,7 @@ def opay_webhook(request):
         return Response({"error": "Associated cart not found."}, status=404)
 
     user = cart.user  # لو كان المستخدم مسجل دخوله
+    offer_result = OfferService().calculate(cart)
 
     # إنشاء الأوردر
     order = Order.objects.create(
@@ -337,26 +338,27 @@ def opay_webhook(request):
         ),
         opay_reference=reference,
     )
-    total_amount = Decimal("0.0")
     products_to_update = []
     for item in cart.items.select_related("variant").all():
         price = Decimal(item.variant.price) - Decimal(item.variant.discount or 0)
-        total_amount += price * item.quantity
         OrderItem.objects.create(
             order=order,
             product=item.variant.product,
             name=item.variant.product.name,
             quantity=item.quantity,
-            price=price,
+            price=price,  # per-unit price before bundle offer, unchanged
             variant=item.variant,
         )
         item.variant.stock -= item.quantity
         products_to_update.append(item.variant)
 
-    # تحديث الإجمالي والمخزون
     shipping_cost = Decimal(checkout_address.get("shipping_cost", "0.0"))
     order.shipping_cost = shipping_cost
-    order.total_amount = total_amount + shipping_cost
+    order.discount_amount = offer_result["discount"]
+    order.applied_offers = offer_result["offers"]
+    order.total_amount = (
+        offer_result["total"] + shipping_cost
+    )  # now matches what was actually charged
     order.save()
 
     # حذف محتويات الكارت فقط، وليس الكارت نفسه

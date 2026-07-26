@@ -92,7 +92,6 @@ class OfferService:
                 remaining -= count * offer.required_quantity
                 remaining -= gift_used
 
-            # المنتجات المتبقية تتحاسب عادي
             if remaining > 0:
 
                 total += normal_price * remaining
