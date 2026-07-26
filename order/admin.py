@@ -164,6 +164,7 @@ class OrderAdmin(admin.ModelAdmin):
                 "calculate_final_total",
                 "remaining_amount",
                 "calculate_amount_without_ship",
+                "display_offers",
             ]
             return tuple(set(readonly) | set(computed_readonly))
         return self.readonly_fields
