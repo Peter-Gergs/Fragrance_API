@@ -81,20 +81,36 @@ admin.site.register(Product, ProductAdmin)
 
 
 class CategoryAdmin(admin.ModelAdmin):
-    list_display = ("name", "is_special", "preview_image")
+    list_display = ("name", "order", "is_special", "preview_image")
+    list_editable = ("order",)
     list_filter = ("is_special",)
     search_fields = ("name",)
     prepopulated_fields = {"slug": ("name",)}
     readonly_fields = ("preview_image",)
+    ordering = ("order", "id")
+
     fieldsets = (
         (
             "Basic Info",
-            {"fields": ("name", "slug", "short_description", "image", "preview_image")},
+            {
+                "fields": (
+                    "name",
+                    "slug",
+                    "short_description",
+                    "order",
+                    "image",
+                    "preview_image",
+                )
+            },
         ),
         (
             "Special Section",
             {
-                "fields": ("is_special", "special_title", "special_description"),
+                "fields": (
+                    "is_special",
+                    "special_title",
+                    "special_description",
+                ),
                 "classes": ("collapse",),
             },
         ),
