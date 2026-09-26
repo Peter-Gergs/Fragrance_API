@@ -9,21 +9,23 @@ class Category(models.Model):
     short_description = models.CharField(max_length=100, blank=True, null=True)
     slug = models.SlugField(max_length=120, unique=True, blank=True)
     image = models.ImageField(upload_to="category_images/", blank=True, null=True)
+
+    # ترتيب الـ Category
+    order = models.PositiveIntegerField(default=1)
+
     is_special = models.BooleanField(default=False)
     special_title = models.CharField(max_length=100, blank=True, null=True)
     special_description = models.CharField(max_length=100, blank=True, null=True)
 
     class Meta:
         verbose_name_plural = "Categories"
-        ordering = ["id"]  # تثبيت الترتيب بناءً على أقدمية الإضافة
+        ordering = ["order", "id"]
 
     def __str__(self):
         return self.name
 
     def save(self, *args, **kwargs):
         if not self.slug:
-            from django.utils.text import slugify
-
             self.slug = slugify(self.name)
         super().save(*args, **kwargs)
 
@@ -38,11 +40,12 @@ class Product(models.Model):
     brand = models.CharField(max_length=50, blank=False)
     created_at = models.DateTimeField(auto_now_add=True)
     addedBy = models.ForeignKey(User, null=True, on_delete=models.SET_NULL)
-    priority = models.PositiveIntegerField(default=1)  
+    priority = models.PositiveIntegerField(default=1)
 
     allow_offer = models.BooleanField(default=True, verbose_name="يدخل في العروض")
+
     class Meta:
-        ordering = ["priority", "-id"]  
+        ordering = ["priority", "-id"]
 
     def __str__(self):
         return self.name
