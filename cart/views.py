@@ -166,9 +166,14 @@ def initiate_payment(request):
         or ShippingSetting.objects.first()
     )
     shipping_cost = shipping_setting.cost if shipping_setting else 65
-    total_amount = (
-        (100) if (request.data.get("method") == "cash") else (subtotal + shipping_cost)
-    )
+    total_amount = 0
+
+    if request.data.get("method") == "cash":
+        # Cash on delivery: only a deposit is charged online
+        total_amount = 200 if subtotal + shipping_cost >= 1500 else 100
+    else:
+        total_amount = subtotal + shipping_cost
+
     amount = int(total_amount * 100)
 
     # 2. بيانات العميل
