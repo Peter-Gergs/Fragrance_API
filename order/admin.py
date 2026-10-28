@@ -140,7 +140,11 @@ class OrderAdmin(admin.ModelAdmin):
     # الحقل الجديد
     def remaining_amount(self, obj):
         if obj.payment_status == PaymentStatus.SHIPPING_PAID:
-            remaining = obj.total_amount - 100
+            remaining = 0
+            if  obj.total_amount > 1500: 
+                remaining = obj.total_amount - 200
+            else :
+                remaining = obj.total_amount - 100
             return f"{remaining:.2f} EGP"
         return "—"
 
