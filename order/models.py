@@ -46,6 +46,9 @@ class Order(models.Model):
     shipping_cost = models.DecimalField(max_digits=6, decimal_places=2, default=0)
     discount_amount = models.DecimalField(max_digits=8, decimal_places=2, default=0)
     applied_offers = models.JSONField(default=list, blank=True)
+    receipt_token = models.CharField(max_length=64, unique=True, null=True, blank=True, db_index=True)
+    payment_method = models.CharField(max_length=20, default="visa")
+    amount_paid = models.DecimalField(max_digits=12, decimal_places=2, default=0)
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):

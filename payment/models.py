@@ -15,6 +15,8 @@ class PaymentTransaction(models.Model):
 
     # تخزين بيانات العميل والشحن كـ JSON
     checkout_address_json = models.JSONField(default=dict)
+    checkout_snapshot = models.JSONField(default=dict)
+    receipt_token = models.CharField(max_length=64, unique=True, null=True, blank=True)
 
     # حالة العملية
     status = models.CharField(max_length=100, default="PENDING")

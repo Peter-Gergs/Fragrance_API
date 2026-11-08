@@ -121,3 +121,28 @@ def new_order(request):
             "order_id": order.id,
         }
     )
+
+
+@api_view(["GET"])
+def get_receipt(request):
+    """A random checkout capability token, not a guessable order ID, grants receipt access."""
+    token = request.query_params.get("token", "")
+    if len(token) != 64 or not all(c in "0123456789abcdef" for c in token):
+        return Response({"error": "Invalid receipt token"}, status=400)
+    order = get_object_or_404(Order.objects.prefetch_related("orderitems"), receipt_token=token)
+    items = [{
+        "name": item.name, "size_ml": item.variant.size_ml if item.variant else None,
+        "quantity": item.quantity, "unit_price": str(item.price),
+        "line_total": str(item.price * item.quantity),
+    } for item in order.orderitems.all()]
+    from decimal import Decimal
+    subtotal = sum((item.price * item.quantity for item in order.orderitems.all()), Decimal("0"))
+    return Response({
+        "order_id": order.pk, "created_at": order.created_at,
+        "payment_status": order.payment_status, "payment_method": order.payment_method,
+        "items": items, "subtotal": str(subtotal),
+        "discount": str(order.discount_amount), "offers": order.applied_offers,
+        "shipping": str(order.shipping_cost), "total": str(order.total_amount),
+        "amount_paid": str(order.amount_paid),
+        "amount_due": str(max(Decimal("0"), Decimal(str(order.total_amount)) - order.amount_paid)),
+    })
