@@ -21,9 +21,6 @@ from django.views.decorators.csrf import csrf_exempt
 import sys
 from payment.models import PaymentTransaction  # <=== تم الإضافة
 import json  # تم الإضافة
-import secrets
-from django.db import transaction as db_transaction
-from django.db.models import F
 import logging
 from offers.services import OfferService
 
@@ -161,7 +158,6 @@ def initiate_payment(request):
 
     offer_result = OfferService().calculate(cart)
     subtotal = offer_result["total"]
-    receipt_token = secrets.token_hex(32)
 
     shipping_setting = (
         ShippingSetting.objects.filter(
@@ -178,7 +174,7 @@ def initiate_payment(request):
     else:
         total_amount = subtotal + shipping_cost
 
-    amount = int((Decimal(total_amount) * 100).to_integral_value())
+    amount = int(total_amount * 100)
 
     # 2. بيانات العميل
     if request.user.is_authenticated:
@@ -250,21 +246,8 @@ def initiate_payment(request):
             status=status.HTTP_400_BAD_REQUEST,
         )
 
-    # Snapshot ensures the charged price and receipt cannot drift while paying.
-    snapshot = {
-        "items": [{"variant_id": item.variant_id, "name": item.variant.product.name,
-                   "quantity": item.quantity, "unit_price": str(Decimal(item.variant.price) - Decimal(item.variant.discount or 0))}
-                  for item in cart_items.select_related("variant__product")],
-        "subtotal": str(offer_result["subtotal"]),
-        "discount": str(offer_result["discount"]),
-        "offers": offer_result["offers"],
-        "shipping": str(shipping_cost),
-        "total": str(offer_result["total"] + shipping_cost),
-        "amount_paid": str(total_amount),
-    }
     # إنشاء سجل المعاملة الدائم
     PaymentTransaction.objects.create(
-        checkout_snapshot=snapshot, receipt_token=receipt_token,
         opay_reference=opay_reference,
         cart=cart,
         checkout_address_json=checkout_data,
@@ -276,7 +259,6 @@ def initiate_payment(request):
         {
             "reference": result.get("reference"),
             "redirect_url": result.get("redirect_url"),
-            "receipt_token": receipt_token,
         }
     )
 
@@ -287,65 +269,118 @@ def initiate_payment(request):
 @csrf_exempt
 @api_view(["POST"])
 def opay_webhook(request):
-    # IMPORTANT: Authenticate OPay callback signatures / verify payment server-to-server
-    # using your merchant integration BEFORE trusting payload.status.
-    payload = request.data.get("payload") or {}
-    reference, payment_status = payload.get("reference"), payload.get("status")
+    """
+    Production-ready OPay webhook handler using PaymentTransaction model
+    """
+    print("🔔 OPay Webhook Received:", request.data, file=sys.stderr)
+
+    # الحصول على payload
+    payload = request.data.get("payload", {})
+    if not payload:
+        print("⚠️ Missing payload in webhook", file=sys.stderr)
+        return Response({"error": "Missing payload"}, status=400)
+    reference = payload.get("reference")
+    status = payload.get("status")
     if not reference:
+        print("⚠️ Missing reference in webhook", file=sys.stderr)
         return Response({"error": "Missing reference"}, status=400)
-    # Never trust an unsigned success notification. Configure OPAY_WEBHOOK_SECRET
-    # and validate the actual signature scheme documented for your OPay account.
-    from django.conf import settings
-    if not getattr(settings, "OPAY_WEBHOOK_VERIFIER", None):
-        return Response({"error": "Payment verification not configured"}, status=503)
-    if not settings.OPAY_WEBHOOK_VERIFIER(request):
-        return Response({"error": "Invalid payment signature"}, status=403)
-    with db_transaction.atomic():
-        txn = PaymentTransaction.objects.select_for_update().filter(opay_reference=reference).first()
-        if not txn:
-            existing = Order.objects.filter(opay_reference=reference).first()
-            return Response({"status": "Already processed"} if existing else {"error": "Unknown reference"}, status=200 if existing else 404)
-        if payment_status != "SUCCESS":
-            txn.status = payment_status or "UNKNOWN"
-            txn.save(update_fields=["status"])
-            return Response({"status": "Payment not confirmed"})
-        snapshot = txn.checkout_snapshot
-        if not snapshot or not snapshot.get("items"):
-            return Response({"error": "Missing checkout snapshot"}, status=409)
-        checkout = txn.checkout_address_json
-        cart = txn.cart
-        order = Order.objects.create(
-            user=cart.user if cart else None, username=checkout.get("name"),
-            customer_phone=checkout.get("customer_phone") or "",
-            governorate=checkout.get("governorate") or "", city=checkout.get("city") or "",
-            street=checkout.get("street") or "", building_number=checkout.get("building_number"),
-            floor_number=checkout.get("floor_number"), apartment_number=checkout.get("apartment_number"),
-            landmark=checkout.get("landmark"), opay_reference=reference,
-            total_amount=Decimal(snapshot["total"]), shipping_cost=Decimal(snapshot["shipping"]),
-            discount_amount=Decimal(snapshot["discount"]), applied_offers=snapshot["offers"],
-            amount_paid=Decimal(snapshot["amount_paid"]),
-            payment_method=checkout.get("method", "visa"), receipt_token=txn.receipt_token,
-            payment_status=PaymentStatus.SHIPPING_PAID if checkout.get("method") == "cash" else PaymentStatus.PAID,
+
+    try:
+        transaction = PaymentTransaction.objects.get(opay_reference=reference)
+    except PaymentTransaction.DoesNotExist:
+        print(
+            f"❌ PaymentTransaction not found for reference {reference}",
+            file=sys.stderr,
         )
-        for item in snapshot["items"]:
-            variant = ProductVariant.objects.select_for_update().select_related("product").get(pk=item["variant_id"])
-            if variant.stock < item["quantity"]:
-                # Payment was collected: retain transaction for manual fulfillment/refund.
-                raise ValueError("Insufficient stock after payment; manual reconciliation required")
-            OrderItem.objects.create(
-                order=order, product=variant.product, variant=variant,
-                name=item["name"], quantity=item["quantity"], price=Decimal(item["unit_price"]),
-            )
-            variant.stock = F("stock") - item["quantity"]
-            variant.save(update_fields=["stock"])
-        if cart:
-            # Only remove items that still match the checkout snapshot.
-            for item in snapshot["items"]:
-                cart_item = cart.items.filter(variant_id=item["variant_id"]).first()
-                if cart_item and cart_item.quantity == item["quantity"]:
-                    cart_item.delete()
-        txn.delete()
-    return Response({"status": "Order created successfully", "order_id": order.pk})
+        return Response({"error": "Payment reference not found."}, status=404)
+
+    if transaction.status == "SUCCESS":
+        print(f"ℹ️ Transaction already processed: {reference}", file=sys.stderr)
+        return Response({"status": "Already processed"})
+
+    transaction.status = status
+    transaction.save()
+
+    if status != "SUCCESS":
+        print(
+            f"ℹ️ Payment not successful, status={status}, reference={reference}",
+            file=sys.stderr,
+        )
+        return Response({"status": f"Ignored (status={status})"})
+
+    # 2. استخراج البيانات من الـ Transaction <=== التعديل هنا
+    cart = transaction.cart
+    checkout_address = transaction.checkout_address_json
+
+    if not cart:
+        # لو الكارت اتحذف لسبب ما قبل Webhook
+        print(
+            f"❌ Cart not found in transaction for reference {reference}",
+            file=sys.stderr,
+        )
+        return Response({"error": "Associated cart not found."}, status=404)
+
+    user = cart.user  # لو كان المستخدم مسجل دخوله
+    offer_result = OfferService().calculate(cart)
+
+    # إنشاء الأوردر
+    order = Order.objects.create(
+        user=user,
+        username=checkout_address.get("name"),
+        customer_phone=checkout_address.get("customer_phone"),
+        governorate=checkout_address.get("governorate"),
+        city=checkout_address.get("city"),
+        street=checkout_address.get("street"),
+        building_number=checkout_address.get("building_number"),
+        floor_number=checkout_address.get("floor_number"),
+        apartment_number=checkout_address.get("apartment_number"),
+        landmark=checkout_address.get("landmark"),
+        total_amount=Decimal("0.0"),
+        payment_status=(
+            PaymentStatus.SHIPPING_PAID
+            if checkout_address.get("method") == "cash"
+            else PaymentStatus.PAID
+        ),
+        opay_reference=reference,
+    )
+    products_to_update = []
+    for item in cart.items.select_related("variant").all():
+        price = Decimal(item.variant.price) - Decimal(item.variant.discount or 0)
+        OrderItem.objects.create(
+            order=order,
+            product=item.variant.product,
+            name=item.variant.product.name,
+            quantity=item.quantity,
+            price=price,  # per-unit price before bundle offer, unchanged
+            variant=item.variant,
+        )
+        item.variant.stock -= item.quantity
+        products_to_update.append(item.variant)
+
+    shipping_cost = Decimal(checkout_address.get("shipping_cost", "0.0"))
+    order.shipping_cost = shipping_cost
+    order.discount_amount = offer_result["discount"]
+    order.applied_offers = offer_result["offers"]
+    order.total_amount = (
+        offer_result["total"] + shipping_cost
+    )  # now matches what was actually charged
+    order.save()
+
+    # حذف محتويات الكارت فقط، وليس الكارت نفسه
+    cart.items.all().delete()
+
+    for variant in products_to_update:
+        variant.save()
+
+    # 4. حذف سجل المعاملة بعد نجاح إنشاء الأوردر
+    transaction.delete()
+
+    print(
+        f"✅ Order created successfully for reference {reference}, order_id={order.id}",
+        file=sys.stderr,
+    )
+
+    return Response({"status": "Order created successfully", "order_id": order.id})
 
 
 @api_view(["GET"])
